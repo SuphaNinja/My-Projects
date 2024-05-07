@@ -2,13 +2,14 @@
 
 
 import { useState } from "react";
-import Home from "../../page";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
+import Home from "@/app/home";
 
 
 
@@ -49,7 +50,7 @@ export default function Page() {
                     <Input name="title" placeholder="Title..." onChange={handleFormChange} value={Card.title} type="text" id="Title" className="text-lg" />
                     <Button className="w-1/2 mx-auto mt-2 text-xl" onClick={() => createCard.mutate()}>Add Card</Button>
                 </div>
-                <img src="https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Mordekaiser_42.jpg" className="w-60 h-60" />
+                <img src="https://assets.change.org/photos/4/xm/wh/kMXmWhqpttXscyF-1600x900-noPad.jpg?1524762802" className="w-60 h-60" />
             </div>
         </Home>
     )

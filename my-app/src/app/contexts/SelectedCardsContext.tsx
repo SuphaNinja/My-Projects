@@ -66,3 +66,30 @@ export const useGameSession = () => {
     }
     return context;
 };
+
+const JoinSuccessContext = createContext<any>(undefined);
+
+export const JoinSuccessProvider = ({ children }: any) => {
+    const [ joinSuccess, setJoinSuccess ] = useState(() => {
+        const saved = localStorage.getItem("joinSuccess")
+        return saved ? JSON.parse(saved) : false;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('joinSuccess', JSON.stringify(joinSuccess));
+    }, [joinSuccess]);
+
+    return (
+        <JoinSuccessContext.Provider value={{ joinSuccess, setJoinSuccess }}>
+            {children}
+        </JoinSuccessContext.Provider>
+    );
+};
+
+export const useJoinSuccess = () => {
+    const context = useContext(JoinSuccessContext);
+    if (context === undefined) {
+        throw new Error('useJoinSuccess must be used within a JoinSuccessProvider');
+    }
+    return context;
+};

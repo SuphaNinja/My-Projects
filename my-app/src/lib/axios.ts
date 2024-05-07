@@ -6,14 +6,10 @@ const api = {
         return data;
     },
 
-    getAllCards: async () => {
-        const { data }  = await axios.get('/api/requests/get-all-cards');
+    getMatchHistory: async () => {
+        const { data } = await axios.get("/api/requests/get-gamesessions-by-userId");
         return data;
-    },
-    getCard: async (title:any) => {
-        const { data }  = await axios.get(`/api/requests/get-card/${title}`);
-        return data;
-    },
+    }
 };
 
 export default api;

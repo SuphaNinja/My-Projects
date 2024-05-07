@@ -85,6 +85,7 @@ model GameCard {
   gameSession     GameSession   @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
   gameSessionId   String
   title           String
+  image           String
   memoryCard      MemoryCards   @relation(fields: [memoryCardId], references: [id], onDelete: Cascade)
   memoryCardId    String
   isMatched       Boolean       @default(false)

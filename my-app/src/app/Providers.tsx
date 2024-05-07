@@ -1,7 +1,7 @@
 "use client"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from 'react';
-import { GameSessionProvider, SelectedCardsProvider } from "./contexts/SelectedCardsContext";
+import { GameSessionProvider, SelectedCardsProvider, JoinSuccessProvider } from "./contexts/SelectedCardsContext";
 
 export default function Providers({ children }: { children: React.ReactNode; }) {
 
@@ -11,9 +11,11 @@ export default function Providers({ children }: { children: React.ReactNode; }) 
     return (
         <QueryClientProvider client={queryClient}>
             <GameSessionProvider>
-            <SelectedCardsProvider>
-                {children}
-            </SelectedCardsProvider>
+                <JoinSuccessProvider>
+                    <SelectedCardsProvider>
+                        {children}
+                    </SelectedCardsProvider>
+                </JoinSuccessProvider>
             </GameSessionProvider>
         </QueryClientProvider>
     );

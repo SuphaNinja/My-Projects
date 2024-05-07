@@ -33,11 +33,7 @@ const io = new Server(server, {
 });
 
 import prisma from "@/lib/prisma";
-import { GameSession, Player, User } from "@prisma/client";
-import Card from "../pages/GamePage/Card";
-
-
-
+import { User } from "@prisma/client";
 
 io.on("connection", async (socket) => {
     console.log(`User ${socket.id} Connected`);
@@ -84,6 +80,7 @@ io.on("connection", async (socket) => {
             position: index,
             isVisible: false,
             isMatched: false,
+            image: card.image
         }));
     
 
@@ -94,22 +91,17 @@ io.on("connection", async (socket) => {
 
     // Create player function 
     async function createPlayer(player: any, sessionId: any ) {
-        
-
         const playerData = {
             userId: player.id,
             gameSessionId: sessionId,
             name: player.name ? player.name : player.email,
             points: 0
         };
-        
             return await prisma.player.create({
                 data: playerData
             })
-        
-        
     }
-
+    
     // Create Game
     socket.on("CreateGame", async (user) => {
         console.log("startrequest:", user);
@@ -131,7 +123,9 @@ io.on("connection", async (socket) => {
         const createdGame = await prisma.gameSession.findUnique({
             where: {id: gameSession.id},
             include: {
-                players: true,
+                players: {
+                    include: {foundCards:true}
+                },
                 gameCards: {
                     include:{
                         memoryCard: true
@@ -148,17 +142,22 @@ io.on("connection", async (socket) => {
         socket.emit("error", "Failed to start the game");
         }
   })
-
+  
     //PlayerTwo Joining existing Gamesession by providing sessionId on client
     socket.on("JoinGame", async (player: User, sessionId: string ) =>  {
         const playerTwo = await createPlayer(player, sessionId);
         const gameData = await prisma.gameSession.update({
             where: { id: sessionId },
-            data: { status: "active" }
+            data: { status: "active" },
+            include: { 
+                players: {
+                    include: { foundCards:true }
+                },
+                gameCards: true
+            }
         }); 
         socket.emit("JoinGame", gameData);
     });
-
 
     let selectedCards:any[] = []
     socket.on("ChangeCardData", async (clickedCard, user) => {
@@ -166,7 +165,9 @@ io.on("connection", async (socket) => {
        
 
         try {
-
+            if (!user) {
+                throw new Error("User could not be found", user )
+            }
             if (clickedCard !== null && selectedCards.length < 1) {
                 console.log("clicked card 1st if : ", clickedCard);
                 
@@ -195,6 +196,10 @@ io.on("connection", async (socket) => {
                         },
                         data: { isVisible: true }
                     })
+                    await prisma.gameSession.update({
+                        where: { id: clickedCard.gameSessionId },
+                        data: { currentTurn: { increment: 1 }}
+                    })
                 setTimeout( async () => {
                     await prisma.gameCard.update({
                     where: {
@@ -212,10 +217,6 @@ io.on("connection", async (socket) => {
                         },
                         data: { isVisible: false }
                     })
-                    await prisma.gameSession.update({
-                        where: { id: clickedCard.gameSessionId },
-                        data: { currentTurn: { increment: 1 }}
-                    })
                     selectedCards = [];
                 }, 1000);
               
@@ -229,44 +230,33 @@ io.on("connection", async (socket) => {
             ) {
                 console.log("clicked card 3nd if : ", clickedCard);
                 console.log("selected Cards 3nd if: ", selectedCards)
-                await prisma.gameSession.update({
-                    where: { id: clickedCard.gameSessionId },
-                    data: { currentTurn: { increment: 1 }}
-                });
-
-                const player = await prisma.player.updateMany({
+                socket.emit("FoundCard", "Card has been found by " + user.name )
+                await prisma.player.updateMany({
                     where: { gameSessionId: clickedCard.gameSessionId, userId: user.id },
                     data: {
                         points: { increment: 1 },
                     }
                 });
 
+                const player = await prisma.player.findFirst({
+                    where: {userId: user.id, gameSessionId: clickedCard.gameSessionId}
+                });
+
+                if (!player) {
+                    throw new Error("Player not found");
+                }
                 await prisma.gameCard.update({
-                    where: { 
-                        id: clickedCard.id, 
-                        title:  clickedCard.title,
+                    where: {
+                        id:clickedCard.id,
                         gameSessionId: clickedCard.gameSessionId 
                     },
                     data: {
                         isVisible: true,
                         isMatched: true,
-                       
+                        foundById: player.id 
                     }
                 });
 
-                await prisma.gameCard.update({
-                    where: { 
-                        id: selectedCards[0].id, 
-                        title: selectedCards[0].title,
-                        gameSessionId: selectedCards[0].gameSessionId
-                    
-                    },
-                    data: { 
-                        isVisible: true,
-                        isMatched: true,
-                        
-                    }
-                });
                 selectedCards = [];
             }
         } catch (error) {
@@ -278,11 +268,13 @@ io.on("connection", async (socket) => {
     
 
     socket.on("UpdatingGameData", async (gameData) => {
-        if (gameData) {
+        if (gameData && gameData.status !== "completed") {
             const session = await prisma.gameSession.findUnique({
             where: {id: gameData.id},
             include: {
-                players: true,
+                players: {
+                    include: { foundCards:true }
+                },
                 gameCards: {
                     orderBy: {
                         position: "asc"
@@ -300,14 +292,14 @@ io.on("connection", async (socket) => {
     })
     
     socket.on("resetGame", async (session) => {
-        await prisma.gameSession.update({
+        const completedSession = await prisma.gameSession.update({
             where: {id: session.id},
             data: {
                 status: "completed"
             }
         })
             console.log("game session with id: " , session.id , " has been completed!")
+            socket.emit ("gameCompleted", completedSession);
         
-    })
-
-})
+    });
+});
