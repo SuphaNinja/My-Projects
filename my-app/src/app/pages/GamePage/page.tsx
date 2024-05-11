@@ -13,7 +13,6 @@ import PlayerTwoStats from "./PlayerTwoStats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Home from "@/app/home";
-import { useTimer } from 'react-timer-hook';
 
 
 export default function Page() {
@@ -108,9 +107,10 @@ export default function Page() {
             emitRequest();
         }, 100);
 
-        socket.on("UpdatingGameData", (data: any, gameTimer:any) => {
-            setGameSession(data);
-            setTimeLeft(gameTimer);
+        socket.on("UpdatingGameData", (data: any) => {
+            setGameSession(data.session);
+            setTimeLeft(data.gameTimer);
+            
         });
 
         return () => {
@@ -134,13 +134,15 @@ export default function Page() {
     return (
             <Home>
                 <div className="flex ">
+                <Button className="" onClick={() => console.log(timeLeft)}>console.log time </Button>
+                            <Button className="" onClick={() => console.log(gameSession)}>console.log datafromserver </Button>
                     {gameSession ?
                         <div className="flex items-center mx-4 w-full">
                             <Button className="" onClick={() => resetGame()}>Exit Game!</Button>
-                        <Button className="" onClick={() => console.log(timeLeft)}>console.log time </Button>
+                            
                             <p className="text-2xl mx-auto border-x-2 px-4 border-black font-bold text-center ">
-                                {gameSession.currentTurn % 2 === 0 ? 
-                                gameSession?.players[0]?.name : gameSession?.players[1]?.name}'s turn!
+                                {/* {gameSession.currentTurn % 2 === 0 ? 
+                                gameSession?.players[0]?.name : gameSession?.players[1]?.name}'s turn! */}
                             </p>
                            
                         </div>
@@ -165,7 +167,7 @@ export default function Page() {
                         }
                     </div>
                     {gameSession && gameSession.gameCards ? 
-                        <div className="col-span-4 dark:bg-slate-600 border-x-2 rounded-md bg-slate-300 grid-cols-3 md:lg:grid-cols-5 grid md:lg:p-8">
+                        <div className="col-span-4 dark:bg-slate-600 border-x-2 rounded-md bg-slate-300 grid-cols-3 md:lg:grid-cols-4 grid md:lg:p-8">
                             {gameSession.gameCards.map((card: any, index: any) => (
                                 <div className="" key={index}>
                                     <Card
@@ -184,11 +186,11 @@ export default function Page() {
                     </div>
                     }
                     <div>
-                        {gameSession && gameSession?.players.length > 1 ? 
+                        {/* {gameSession && gameSession?.players.length > 1 ? 
                             <PlayerTwoStats gameSession={gameSession} />
                         :
                         <p className="text-xl text-center font-semibold">Waiting for player two...</p>
-                        }
+                        } */}
                     </div>
                 </div> 
             </Home>

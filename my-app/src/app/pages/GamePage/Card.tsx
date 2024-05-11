@@ -57,10 +57,10 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
                 <div>
                     <button
                         onClick={() => handleCardClick()}
-                        className="md:size-44 lg:size-56  size-24 overflow-hidden rounded-xl hover:brightness-50 transition-all"
+                        className="md:size-32 lg:size-56  size-24 overflow-hidden rounded-xl hover:brightness-50 transition-all"
                     >
-                        <div className="relative md:size-44 lg:size-56   size-24 object-cover ">
-                            <img src={card.memoryCard?.image} className="md:size-44 lg:size-56 size-24" />
+                        <div className="relative md:size-32 lg:size-56   size-24 object-cover ">
+                            <img src={card.memoryCard?.image} className="md:size-32 lg:size-56 size-24" />
                             <h2 className="absolute top-2 left-2 text-xl ">{card.title}</h2>
                         </div>
                     </button>
@@ -68,8 +68,8 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
                 )
             : (
                 <div>
-                        <button onClick={() => handleCardClick()} className="md:size-44 size-24 lg:size-56   overflow-hidden rounded-xl hover:brightness-50 transition-all">
-                            <img className="md:size-44 lg:size-56  size-24 " src="https://howlongtobeat.com/games/5203_League_of_Legends.jpg" />
+                        <button onClick={() => handleCardClick()} className="md:size-32 size-24 lg:size-56   overflow-hidden rounded-xl hover:brightness-50 transition-all">
+                            <img className="md:size-32 lg:size-56  size-24 " src="https://howlongtobeat.com/games/5203_League_of_Legends.jpg" />
                     </button>
                 </div>
                 )

@@ -165,7 +165,6 @@ io.on("connection", async (socket) => {
         clearTimeout(gameTimer); 
         gameTimer = setTimeout(() => {
         
-        socket.emit("timeExpired","timnes up" )
         performActionAfterTimeout(sessionId);
     }, 30000); 
 }
@@ -288,9 +287,8 @@ io.on("connection", async (socket) => {
         
     });
     
-
     socket.on("UpdatingGameData", async (gameData) => {
-        if (gameData && gameData.status !== "completed") {
+        if (gameData && gameData.id && gameData.status !== "completed") {
             const session = await prisma.gameSession.findUnique({
             where: {id: gameData.id},
             include: {
@@ -306,7 +304,12 @@ io.on("connection", async (socket) => {
             }
             
             });
-            socket.emit("UpdatingGameData", session, gameTimer)
+
+            const dataToSend = {
+                session: session,
+                gameTimer: gameTimer
+            }
+            socket.emit("UpdatingGameData",  dataToSend ,)
 
         } else {
             return;
