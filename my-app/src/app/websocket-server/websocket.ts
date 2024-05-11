@@ -35,6 +35,7 @@ const io = new Server(server, {
 import prisma from "@/lib/prisma";
 import { User } from "@prisma/client";
 
+
 io.on("connection", async (socket) => {
     console.log(`User ${socket.id} Connected`);
     const count = io.engine.clientsCount;
@@ -159,10 +160,28 @@ io.on("connection", async (socket) => {
         socket.emit("JoinGame", gameData);
     });
 
+    let gameTimer:any = null;
+    async function resetTimer(sessionId:any) {
+        clearTimeout(gameTimer); 
+        gameTimer = setTimeout(() => {
+        
+        socket.emit("timeExpired","timnes up" )
+        performActionAfterTimeout(sessionId);
+    }, 30000); 
+}
+
+
+    async function performActionAfterTimeout(sessionId:any) {
+        console.log("Performing some action due to timeout...");
+        await prisma.gameSession.update({
+            where:{ id: sessionId},
+            data: {currentTurn: { increment:1 }}
+        })
+    }
     let selectedCards:any[] = []
     socket.on("ChangeCardData", async (clickedCard, user) => {
         console.log("selected Cards first emit if: ", selectedCards)
-       
+        
 
         try {
             if (!user) {
@@ -179,11 +198,12 @@ io.on("connection", async (socket) => {
                 })
                 selectedCards.push(clickedCard);
                 console.log("selected Cards 1st if: ", selectedCards)
+                resetTimer(clickedCard.gameSessionId)
             }
 
             if (
                 clickedCard !== null && selectedCards.length > 0 
-                && clickedCard.memoryCardId !== selectedCards[0].memoryCardId  
+                && clickedCard.memoryCardId !== selectedCards[0].memoryCardId   
                 && clickedCard.title !== selectedCards[0].title
             ) {
                 console.log("clicked card 2nd if : ", clickedCard);
@@ -200,7 +220,7 @@ io.on("connection", async (socket) => {
                         where: { id: clickedCard.gameSessionId },
                         data: { currentTurn: { increment: 1 }}
                     })
-                setTimeout( async () => {
+                setTimeout(async () => {
                     await prisma.gameCard.update({
                     where: {
                         id: clickedCard.id, 
@@ -219,6 +239,7 @@ io.on("connection", async (socket) => {
                     })
                     selectedCards = [];
                 }, 1000);
+                resetTimer(clickedCard.gameSessionId)
               
             }
 
@@ -256,6 +277,7 @@ io.on("connection", async (socket) => {
                         foundById: player.id 
                     }
                 });
+                resetTimer(clickedCard.gameSessionId)
 
                 selectedCards = [];
             }
@@ -284,7 +306,7 @@ io.on("connection", async (socket) => {
             }
             
             });
-            socket.emit("UpdatingGameData", session)
+            socket.emit("UpdatingGameData", session, gameTimer)
 
         } else {
             return;
@@ -301,5 +323,6 @@ io.on("connection", async (socket) => {
             console.log("game session with id: " , session.id , " has been completed!")
             socket.emit ("gameCompleted", completedSession);
         
-    });
+    }); 
+    
 });

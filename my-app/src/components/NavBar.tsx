@@ -29,7 +29,7 @@ export default function NavBar() {
                 </Link>
             </div>
             <div className="">
-                <p className="font-bold font-serif text-2xl text-center">League Of Memory</p>
+                <Link href={process.env.NEXT_PUBLIC_URL + "/"} className="font-bold font-serif text-2xl text-center">League Of Memory</Link>
             </div>
             <div className="flex gap-2">
                 {!session?.user? 

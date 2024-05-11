@@ -48,8 +48,19 @@ model User {
   adress        String?
   email         String   @unique
   emailVerified DateTime?
+  players       Player[]
+  following     Follow[] @relation("following")
+  followed      Follow[] @relation("followed")
   accounts      Account[]
   sessions      Session[]
+}
+
+model Follow {
+  id           String @id @default(cuid())
+  following    User  @relation("following",fields: [followingId], references: [id], onDelete: Cascade)
+  followingId  String
+  followed     User  @relation("followed",fields: [followedId], references: [id], onDelete: Cascade)
+  followedId   String
 }
 
 model VerificationToken {
@@ -102,6 +113,7 @@ model Player {
   id              String       @id @default(cuid())
   gameSession     GameSession  @relation(fields: [gameSessionId], references: [id], onDelete: Cascade)
   gameSessionId   String
+  user            User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String
   name            String
   points          Int          @default(0)

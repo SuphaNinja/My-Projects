@@ -13,13 +13,14 @@ import PlayerTwoStats from "./PlayerTwoStats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Home from "@/app/home";
+import { useTimer } from 'react-timer-hook';
 
 
 export default function Page() {
     const { gameSession, setGameSession } = useGameSession();
     const [ clickedCard ,setClickedCard ] = useState(null);
     const { toast } = useToast();
-    
+    const [ timeLeft, setTimeLeft ] = useState("0")
 
     const { data:user } = useSession()
 
@@ -90,7 +91,6 @@ export default function Page() {
         if (gameSession && gameSession.status === "completed") {
             setGameSession(null)
         }
-
         
     }, [gameSession])
 
@@ -100,18 +100,23 @@ export default function Page() {
         };
         
         emitRequest();
-
+        socket.on("timeExpired", () =>{
+            toast({ variant: "default", title: "Time is up",})
+        })
+        
         const intervalId = setInterval(() => {
             emitRequest();
         }, 100);
 
-        socket.on("UpdatingGameData", (data: any) => {
+        socket.on("UpdatingGameData", (data: any, gameTimer:any) => {
             setGameSession(data);
+            setTimeLeft(gameTimer);
         });
 
         return () => {
             clearInterval(intervalId);
             socket.off("UpdatingGameData");
+            socket.off("timeExpired");
         };  
     }, [gameSession]);
 
@@ -122,16 +127,22 @@ export default function Page() {
             setClickedCard(null)
         }, 100);
     }, [clickedCard])
-        return(
+        
+    
+    
+    
+    return (
             <Home>
                 <div className="flex ">
                     {gameSession ?
                         <div className="flex items-center mx-4 w-full">
                             <Button className="" onClick={() => resetGame()}>Exit Game!</Button>
+                        <Button className="" onClick={() => console.log(timeLeft)}>console.log time </Button>
                             <p className="text-2xl mx-auto border-x-2 px-4 border-black font-bold text-center ">
                                 {gameSession.currentTurn % 2 === 0 ? 
                                 gameSession?.players[0]?.name : gameSession?.players[1]?.name}'s turn!
                             </p>
+                           
                         </div>
                     :
                     <div className="flex items-center mx-4 w-full">
@@ -140,6 +151,7 @@ export default function Page() {
                             <Button className="" onClick={() => joinGame(user?.user, gameKeyInput)}>Join Game (player 2)</Button>
                         </div>
                         <p className="text-xl mx-auto">Start or join a game to play!</p>
+                        
                     </div>
                     }            
                     <p className="ml-auto font-semibold  text-lg ">GameKey: {gameSession?.id ? gameSession.id: "Create a game and the GameKey Will show up here!"}</p>
@@ -182,3 +194,6 @@ export default function Page() {
             </Home>
         )
 }
+
+
+
