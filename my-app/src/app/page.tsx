@@ -26,6 +26,10 @@ export default function Page() {
 
   const followUser = useMutation({
     mutationFn: (userId:string) => api.followUser(userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey:["friend"]}),
+      queryClient.invalidateQueries({queryKey:["users"]})
+    }
   });
 
   const currentUser = useQuery({
@@ -55,6 +59,7 @@ export default function Page() {
     } else {
       toast({ variant: "default", title: `Success`, description: `You followed ${user.name}` })
     }
+    checkFollowStatus(currentUserId, user)
   };
 
   const checkFollowStatus = (currentUserId: any, user: any) => {
@@ -90,7 +95,7 @@ export default function Page() {
       setSortedUsers(sortUsersByPoints(allUsers.data.allUsers))
     }
     
-  }, [allUsers.isSuccess])
+  }, [allUsers])
 
   return (
     <Home>
@@ -116,7 +121,7 @@ export default function Page() {
                     {currentUser ? 
                       <Button onClick={() => followUserFunction(user, currentUser.data.id)}>{checkFollowStatus(currentUser.data.id, user)}</Button> 
                     : 
-                    <Button onClick={()=> signIn("github")}>Log in to follow user!</Button>
+                      <Button onClick={()=> signIn("github")}>Log in to follow user!</Button>
                     }
                   </div>
                 </div>
@@ -129,7 +134,6 @@ export default function Page() {
         <div className="col-span-6 border-x-4 h-screen">
           <div className="flex gap-12">
             <div className="flex w-full flex-col gap-4 justify-center">
-              <button onClick={() => console.log(friendList )}>test</button>
               <h2 className="text-3xl underline text-center font-semibold ">Leaderboard</h2>
               {allUsers.isSuccess &&
                 <div className="flex w-full flex-col gap-4 justify-center">
@@ -180,7 +184,7 @@ export default function Page() {
                     {currentUser.isSuccess ?                        
                       <div className="flex flex-col">
                         <Button className="mb-2" onClick={() => followUserFunction(user, currentUser.data.id)}>{checkFollowStatus(currentUser.data.id, user)}</Button>
-                        {user.players[user.players.length - 1].gameSession.status === "active" || user.players[user.players.length - 1]?.gameSession.status === "pending"  ? 
+                        {user.players[user.players.length - 1]?.gameSession?.status === "active" || user.players[user.players.length - 1]?.gameSession?.status === "pending"  ? 
                           <p className="text-center text-sm font-light">In game</p>
                         :
                           <p className="text-center text-sm font-light">Offline/Browsing</p>

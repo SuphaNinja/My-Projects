@@ -43,7 +43,7 @@ io.on("connection", async (socket) => {
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
     });
-
+    
 
 
 
@@ -158,33 +158,66 @@ io.on("connection", async (socket) => {
             }
         }); 
         socket.emit("JoinGame", gameData);
+        startTimer(sessionId)
     });
 
-    let gameTimer:any = null;
-    async function resetTimer(sessionId:any) {
-        clearTimeout(gameTimer); 
-        gameTimer = setTimeout(() => {
-        
-        performActionAfterTimeout(sessionId);
-    }, 30000); 
-}
-
-
-    async function performActionAfterTimeout(sessionId:any) {
-        console.log("Performing some action due to timeout...");
+    
+    const resetGameTimer = async (sessionId:string) => {
         await prisma.gameSession.update({
-            where:{ id: sessionId},
-            data: {currentTurn: { increment:1 }}
+            where: { id: sessionId },
+            data: {
+                currentTime: 30
+            }
         })
     }
+
+    let timerInterval: NodeJS.Timeout;
+    const startTimer = async (sessionId:string ) => {
+        timerInterval = setInterval(async () => {
+            try {
+                
+                const session = await prisma.gameSession.findUnique({
+                    where: { id: sessionId },
+                    select: { currentTime: true, currentTurn: true }
+                });
+
+                if (session && session.currentTime && session.currentTime > 0) {
+                    
+                    await prisma.gameSession.update({
+                        where: { id: sessionId },
+                        data: { currentTime: { decrement: 1 } }
+                    });
+                } else {
+                    
+                    await prisma.gameSession.update({
+                        where: { id: sessionId },
+                        data: { 
+                            currentTurn: { increment: 1 },
+                            currentTime: 30
+                        }
+                    });
+                }
+                
+            } catch (error) {
+                console.error(`Failed to update session ${sessionId}:`, error);
+            }
+        }, 1000);
+    }
+    const stopTimer = () => {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            console.log('Timer stopped.');
+        }
+    };
+
+   
+   
     let selectedCards:any[] = []
     socket.on("ChangeCardData", async (clickedCard, user) => {
-        console.log("selected Cards first emit if: ", selectedCards)
-        
 
         try {
             if (!user) {
-                throw new Error("User could not be found", user )
+                throw new Error("User could not be found", user );
             }
             if (clickedCard !== null && selectedCards.length < 1) {
                 console.log("clicked card 1st if : ", clickedCard);
@@ -196,8 +229,6 @@ io.on("connection", async (socket) => {
                     }
                 })
                 selectedCards.push(clickedCard);
-                console.log("selected Cards 1st if: ", selectedCards)
-                resetTimer(clickedCard.gameSessionId)
             }
 
             if (
@@ -205,8 +236,8 @@ io.on("connection", async (socket) => {
                 && clickedCard.memoryCardId !== selectedCards[0].memoryCardId   
                 && clickedCard.title !== selectedCards[0].title
             ) {
-                console.log("clicked card 2nd if : ", clickedCard);
-                console.log("selected Cards 2nd if: ", selectedCards)
+                
+                resetGameTimer(clickedCard.gameSessionId)
                 await prisma.gameCard.update({
                         where: { 
                             id: clickedCard.id, 
@@ -238,7 +269,7 @@ io.on("connection", async (socket) => {
                     })
                     selectedCards = [];
                 }, 1000);
-                resetTimer(clickedCard.gameSessionId)
+                
               
             }
 
@@ -257,6 +288,7 @@ io.on("connection", async (socket) => {
                         points: { increment: 1 },
                     }
                 });
+                resetGameTimer(clickedCard.gameSessionId)
 
                 const player = await prisma.player.findFirst({
                     where: {userId: user.id, gameSessionId: clickedCard.gameSessionId}
@@ -276,7 +308,7 @@ io.on("connection", async (socket) => {
                         foundById: player.id 
                     }
                 });
-                resetTimer(clickedCard.gameSessionId)
+                
 
                 selectedCards = [];
             }
@@ -286,7 +318,8 @@ io.on("connection", async (socket) => {
         
         
     });
-    
+
+  
     socket.on("UpdatingGameData", async (gameData) => {
         if (gameData && gameData.id && gameData.status !== "completed") {
             const session = await prisma.gameSession.findUnique({
@@ -302,14 +335,11 @@ io.on("connection", async (socket) => {
                     include: { memoryCard: true, }
                 }
             }
-            
             });
+            
 
-            const dataToSend = {
-                session: session,
-                gameTimer: gameTimer
-            }
-            socket.emit("UpdatingGameData",  dataToSend ,)
+            
+            socket.emit("UpdatingGameData",  session ,)
 
         } else {
             return;
@@ -317,15 +347,24 @@ io.on("connection", async (socket) => {
     })
     
     socket.on("resetGame", async (session) => {
+        stopTimer()
         const completedSession = await prisma.gameSession.update({
             where: {id: session.id},
             data: {
                 status: "completed"
             }
         })
-            console.log("game session with id: " , session.id , " has been completed!")
+            console.log("game session with id: " , session.id , "has been completed!")
             socket.emit ("gameCompleted", completedSession);
-        
     }); 
-    
+
+    socket.on("invitePlayer", (sessionId, userName) => {
+        console.log("invite info : ", sessionId, userName)
+        const inviteInfo = {
+            sessionId: sessionId,
+            inviter: userName
+        }
+        socket.emit("acceptInvite", inviteInfo)
+    })
+
 });

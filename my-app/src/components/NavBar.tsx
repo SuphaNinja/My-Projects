@@ -5,7 +5,6 @@ import { signIn, signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { Button, ButtonProps } from "./ui/button";
 import { ToggleTheme } from "./ToggleTheme";
-import { link } from "fs";
 import Link from "next/link";
 
 
@@ -19,7 +18,7 @@ export default function NavBar() {
             <div className="flex gap-4">
                 <Link
                     href={process.env.NEXT_PUBLIC_URL + "pages/GamePage"}
-                    className="bg-slate-900 text-slate-50 hover:bg-slate-900/90 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-semibold ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300">
+                    className="bg-slate-900 text-slate-50 hover:bg-slate-900/90 dark:bg-slate-50 dark:text-slate-900 dark:hover:bg-slate-50/90 h-10 px-4 py-2 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-semibold ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 dark:ring-offset-slate-950 dark:focus-visible:ring-slate-300">
                     Play!
                 </Link>
                 <Link 
@@ -34,7 +33,7 @@ export default function NavBar() {
             <div className="flex gap-2">
                 {!session?.user? 
                     <div className="flex gap-2">
-                        <Button onClick={() => signIn("github")}>Sign in</Button> {/* add link to signin page later */}
+                        <Button  onClick={() => signIn("github")}>Sign in</Button> {/* add link to signin page later */}
                         <Button >Sign up</Button> {/* add link to signup page later */}
                     </div>
                 : 
