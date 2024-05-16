@@ -49,14 +49,14 @@ export default function Page() {
         }
     };
 
-    const sendInvite = (sessionId:string, userName:string) => {
+    const sendInvite = (sessionId: string, userName: string, invitedId: string) => {
         if (gameSession) {
-            socket.emit("invitePlayer", sessionId, userName)
+            socket.emit("invitePlayer", sessionId, userName, invitedId)
         }
     }
 
-    const joinGame = (user: any, gameKeyInput:String) => {
-        socket.emit("JoinGame", user, gameKeyInput)
+    const joinGame = (user: any, gameKeyInput:String, ) => {
+        socket.emit("JoinGame", user, gameKeyInput, )
         setGameKeyInput("");
         toast({ variant: "default", title: "Game Joined!", description: `Status: active` });
     };
@@ -75,8 +75,9 @@ export default function Page() {
         })
         
         socket.on("acceptInvite", (inviteInfo:any) => {
-            
-            if (currentUser.isSuccess && inviteInfo.inviter !== currentUser.data.name) {
+            console.log("test0",inviteInfo)
+            console.log(currentUser.isSuccess && inviteInfo.invitedId === currentUser.data.id)
+            if (currentUser.isSuccess && inviteInfo.invitedId === currentUser.data.id) {
                 toast({ 
                     variant: "default", 
                     title: `You got Invited by ${inviteInfo.inviter}`, 
@@ -104,7 +105,10 @@ export default function Page() {
         });
         
         socket.on("FoundCard", (message) => {
-            toast({ variant: "default", title: message, description: "Player get's another turn!" })
+            toast({ 
+                variant: "default", 
+                title: `Card has been found by ${message}!`, 
+                description: `${message} get's another turn!` })
         })
 
         return () => {
@@ -172,6 +176,7 @@ export default function Page() {
             
         };  
     }, [gameSession]);
+
     useEffect(() => {
         if (gameSession?.players?.length === 2) {
             toast({
@@ -190,7 +195,7 @@ export default function Page() {
                 description: `${gameSession.currentTurn % 2 === 0 ? gameSession?.players[0]?.name : gameSession?.players[1]?.name} has lost their turn!` 
             })
         }
-    }, [gameSession?.currentTime])
+    }, [gameSession?.currentTime]);
 
 
     useEffect(() => {
@@ -198,14 +203,19 @@ export default function Page() {
         setTimeout(() => {
             setClickedCard(null)
         }, 100);
-    }, [clickedCard])
+    }, [clickedCard]);
         
-    
+    useEffect(()=> {
+        socket.on("acceptInvite", (data) => {
+            console.log(data)
+        });
+    }, [socket]);
     
     
     return (
             <Home>
                 <div className="flex ">
+                    <button onClick={() => sendInvite("test", "trest", "test")}>test</button>
                     {gameSession ?
                         <div className="flex justify-between mx-4 w-full">
                             <Button className="" onClick={() => resetGame()}>Exit Game!</Button>
@@ -233,7 +243,7 @@ export default function Page() {
                         {gameSession ? 
                             <PlayerOneStats gameSession={gameSession} />
                         :
-                        <p className="text-xl text-center font-semibold">Waiting for player One...</p>
+                            <p className="text-xl text-center font-semibold">Waiting for player One...</p>
                         }
                     </div>
                     {gameSession && gameSession.gameCards ? 
@@ -274,7 +284,7 @@ export default function Page() {
                                                 </div>
                                                 <div className="col-span-2">
                                                     <Button onClick={() => console.log(currentUser)} className="">user</Button>
-                                                    <Button onClick={() => sendInvite(gameSession.id, currentUser.data.name)} className="">Invite</Button>
+                                                    <Button onClick={() => sendInvite(gameSession.id, currentUser.data.name, friend.id)} className="">Invite</Button>
                                                 </div>
                                             </div>
                                         ))}

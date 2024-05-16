@@ -28,8 +28,6 @@ const io = new Server(server, {
     cors: {
         origin: "*",
     },
-    
-    
 });
 
 import prisma from "@/lib/prisma";
@@ -37,14 +35,12 @@ import { User } from "@prisma/client";
 
 
 io.on("connection", async (socket) => {
-    console.log(`User ${socket.id} Connected`);
     const count = io.engine.clientsCount;
-    console.log("client Count " + count);
+    console.log(`User ${socket.id} Connected`);
+    console.log("Client Count " + count);
     socket.on("disconnect", () => {
         console.log(`User ${socket.id} disconnected`);
     });
-    
-
 
 
     // Shuffle Cards
@@ -54,14 +50,14 @@ io.on("connection", async (socket) => {
             [array[i], array[j]] = [array[j], array[i]]; 
         }
         return array;
-    }
+    };
 
     // Fetch all memoryCards so they cant be randomized
     async function fetchMemoryCards() {
         return await prisma.memoryCards.findMany({
             where: {}
         });
-    }
+    };
     
     // Create GameSession function 
     async function createGameSession() {
@@ -70,7 +66,7 @@ io.on("connection", async (socket) => {
                 status: 'pending'
             }
         });
-    }
+    };
 
     // Create gameCards function   
     async function createGameCards(sessionId: string, shuffledCards: any) {
@@ -88,7 +84,7 @@ io.on("connection", async (socket) => {
         return await prisma.gameCard.createMany({
             data: gameCardsData
         });
-    }
+    };
 
     // Create player function 
     async function createPlayer(player: any, sessionId: any ) {
@@ -101,7 +97,7 @@ io.on("connection", async (socket) => {
             return await prisma.player.create({
                 data: playerData
             })
-    }
+    };
     
     // Create Game
     socket.on("CreateGame", async (user) => {
@@ -136,13 +132,16 @@ io.on("connection", async (socket) => {
                     }
                 }
             }
-        })
+        });
+
         socket.emit("gameReady", createdGame);
+
         } catch (error) {
-        console.error("Error starting game:", error);
-        socket.emit("error", "Failed to start the game");
-        }
-  })
+
+            console.error("Error starting game:", error);
+            socket.emit("error", "Failed to start the game");
+        };
+    });
   
     //PlayerTwo Joining existing Gamesession by providing sessionId on client
     socket.on("JoinGame", async (player: User, sessionId: string ) =>  {
@@ -157,8 +156,9 @@ io.on("connection", async (socket) => {
                 gameCards: true
             }
         }); 
+
         socket.emit("JoinGame", gameData);
-        startTimer(sessionId)
+        startTimer(sessionId);
     });
 
     
@@ -168,8 +168,8 @@ io.on("connection", async (socket) => {
             data: {
                 currentTime: 30
             }
-        })
-    }
+        });
+    };
 
     let timerInterval: NodeJS.Timeout;
     const startTimer = async (sessionId:string ) => {
@@ -211,14 +211,13 @@ io.on("connection", async (socket) => {
     };
 
    
-   
-    let selectedCards:any[] = []
+    let selectedCards:any[] = [];
     socket.on("ChangeCardData", async (clickedCard, user) => {
 
         try {
             if (!user) {
                 throw new Error("User could not be found", user );
-            }
+            };
             if (clickedCard !== null && selectedCards.length < 1) {
                 console.log("clicked card 1st if : ", clickedCard);
                 
@@ -229,7 +228,7 @@ io.on("connection", async (socket) => {
                     }
                 })
                 selectedCards.push(clickedCard);
-            }
+            };
 
             if (
                 clickedCard !== null && selectedCards.length > 0 
@@ -271,8 +270,7 @@ io.on("connection", async (socket) => {
                 }, 1000);
                 
               
-            }
-
+            };
 
             if (
                 clickedCard !== null && selectedCards.length > 0 // checking if stored card in selectedCards array and clickedCard is a match! (they dont have same memoryCardId but the same title)
@@ -281,7 +279,7 @@ io.on("connection", async (socket) => {
             ) {
                 console.log("clicked card 3nd if : ", clickedCard);
                 console.log("selected Cards 3nd if: ", selectedCards)
-                socket.emit("FoundCard", "Card has been found by " + user.name )
+                socket.emit("FoundCard", user.name )
                 await prisma.player.updateMany({
                     where: { gameSessionId: clickedCard.gameSessionId, userId: user.id },
                     data: {
@@ -296,7 +294,7 @@ io.on("connection", async (socket) => {
 
                 if (!player) {
                     throw new Error("Player not found");
-                }
+                };
                 await prisma.gameCard.update({
                     where: {
                         id:clickedCard.id,
@@ -308,10 +306,9 @@ io.on("connection", async (socket) => {
                         foundById: player.id 
                     }
                 });
-                
 
                 selectedCards = [];
-            }
+            };
         } catch (error) {
             console.log(error)
         }
@@ -336,15 +333,13 @@ io.on("connection", async (socket) => {
                 }
             }
             });
-            
 
-            
             socket.emit("UpdatingGameData",  session ,)
 
         } else {
             return;
-        }
-    })
+        };
+    });
     
     socket.on("resetGame", async (session) => {
         stopTimer()
@@ -353,18 +348,18 @@ io.on("connection", async (socket) => {
             data: {
                 status: "completed"
             }
-        })
+        });
             console.log("game session with id: " , session.id , "has been completed!")
             socket.emit ("gameCompleted", completedSession);
     }); 
 
-    socket.on("invitePlayer", (sessionId, userName) => {
-        console.log("invite info : ", sessionId, userName)
+    socket.on("invitePlayer", (sessionId, userName, invitedId) => {
+        
         const inviteInfo = {
             sessionId: sessionId,
-            inviter: userName
-        }
+            inviter: userName,
+            invitedId: invitedId
+        };
         socket.emit("acceptInvite", inviteInfo)
-    })
-
+    });
 });

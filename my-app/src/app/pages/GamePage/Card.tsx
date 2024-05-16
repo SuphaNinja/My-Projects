@@ -13,6 +13,13 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
 
     const { toast } = useToast();
 
+    const [isVisible, setIsVisible] = useState(card?.isVisible);
+
+    useEffect(() => {
+        setIsVisible(card?.isVisible);
+    }, [card?.isVisible]);
+
+
     const handleCardClick = () => {
 
         if (card.isMatched === true) {
@@ -53,11 +60,11 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
 
     return (
         <div className="">
-            {card && card.isVisible === true ? (
+            {card && isVisible ? (
                 <div>
                     <button
                         onClick={() => handleCardClick()}
-                        className="md:size-32 lg:size-56  size-24 overflow-hidden rounded-xl hover:brightness-50 transition-all"
+                        className={`md:w-32 md:h-32 lg:w-56 lg:h-56 w-24 h-24 overflow-hidden rounded-xl transition-all duration-500 transform ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}
                     >
                         <div className="relative md:size-32 lg:size-56   size-24 object-cover ">
                             <img src={card.memoryCard?.image} className="md:size-32 lg:size-56 size-24" />
@@ -68,7 +75,7 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
                 )
             : (
                 <div>
-                        <button onClick={() => handleCardClick()} className="md:size-32 size-24 lg:size-56   overflow-hidden rounded-xl hover:brightness-50 transition-all">
+                        <button onClick={() => handleCardClick()} className={`md:w-32 md:h-32 lg:w-56 lg:h-56 w-24 h-24 overflow-hidden rounded-xl transition-all duration-500 transform ${!isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
                             <img className="md:size-32 lg:size-56  size-24 " src="https://howlongtobeat.com/games/5203_League_of_Legends.jpg" />
                     </button>
                 </div>
