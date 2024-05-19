@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 
 
 
-export async function POST (request: NextRequest,{ params }: { params: { userId: string }} ) {
+export async function POST (request: NextRequest, { params }: { params: { userId: string }} ) {
    
     const userId = params.userId;
 

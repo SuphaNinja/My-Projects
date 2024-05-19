@@ -75,7 +75,7 @@ model MemoryCards {
   id            String    @id @default(cuid())
   image         String?
   title         String?
-  isVisible     Boolean @default(false)
+  isVisible     Boolean   @default(false)
   gameCards     GameCard[]
 }
 
