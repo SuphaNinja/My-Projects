@@ -21,19 +21,19 @@ export default function Home () {
 
 
     return (
-        <div className="grid mt-4 grid-cols-6 w-full">
+        <div className="grid mt-4 grid-cols-6 h-[90vh] w-full">
             
-            <div className="col-span-4 overflow-y-scroll max-h-screen border-r-4 border-slate-700 flex flex-col gap-4 h-screen w-full">
+            <div className="col-span-4 overflow-y-scroll no-scrollbar max-h-screen border-r-4 border-slate-700 flex flex-col gap-4 h-[90vh] w-full">
                 {posts.isSuccess ?
                     posts.data?.data?.posts?.map((post, index) => (
                         <div key={index}>
                             <BlogFeed setClickedPostId={setClickedPostId} post={post} />
                         </div>
                     ))
-                    : null
+                    : <p>No posts in the feed.</p>
                 }
             </div>
-            <div className="col-span-2 bg-green-500 h-screen w-full">
+            <div className="col-span-2 bg-green-500 h-[90vh]  w-full">
                 <ViewPost postId={clickedPostId}/>
             </div>  
         </div>

@@ -37,6 +37,7 @@ model Post {
   description   String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        String
+  created_at   DateTime @default(now())
   comments      Comment[]
   likes         Like[]
   image         ImageUpload[]

@@ -40,11 +40,9 @@ export default function CreatePost () {
             }
         }),
         onSuccess: (response) => {
-            // Handle success
             console.log("Post created successfully:", response.data);
         },
         onError: (error) => {
-            // Handle error
             console.error("Error creating post:", error);
         }
     });
@@ -84,7 +82,7 @@ export default function CreatePost () {
                             value={formData.title}
                             onChange={handleChange}
                             className="rounded-md w-full px-2 py-1"
-                            placeholder="example@gmail.com"
+                            placeholder="Title"
                             type="text"
                             required
                         />
@@ -96,7 +94,7 @@ export default function CreatePost () {
                             value={formData.description}
                             onChange={handleChange}
                             className="rounded-md w-full px-2 py-1"
-                            placeholder="***************"
+                            placeholder="Description"
                             type="text"
                             required
                         />
@@ -108,7 +106,7 @@ export default function CreatePost () {
                             value={formData.imageUrl}
                             onChange={handleChange}
                             className="rounded-md w-full px-2 py-1"
-                            placeholder="***************"
+                            placeholder="Image URL"
                             type="text"
                         />
                     </div>

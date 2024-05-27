@@ -28,7 +28,7 @@ export default function Login() {
                 navigate("/")
                 window.location.reload();
                 
-            }, 5000);
+            }, 2000);
         }
     });
 

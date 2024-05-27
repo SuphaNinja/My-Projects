@@ -158,7 +158,6 @@ app.get("/get-current-user", verifyToken, async (req,res) => {
 
 app.get("/get-user", async (req,res) => {
     const userId = req.body;
-    console.log("user it from get user", userId)
 });
 
 
@@ -168,19 +167,21 @@ app.post("/create-post", verifyToken, async (req, res) => {
 
     const postData = req.body;
 
-    const file = req.files.file;
+    
 
     try {
+        const file = req.files ? req.files.file : null;
+
         if (!postData.title) {
             res.send({error: "Title field cannot be left empty!"});
             return;
         }
         if (!postData.description) {
-           res.send({ error: "Description field cannot be left empty!" });
+            res.send({ error: "Description field cannot be left empty!" });
             return;
         }
         if (!postData.imageUrl && !file) {
-           res.send({ error: "You must include either a file or an imageUrl to create a post!" });
+            res.send({ error: "You must include either a file or an imageUrl to create a post!" });
             return;
         }
        
@@ -188,7 +189,7 @@ app.post("/create-post", verifyToken, async (req, res) => {
             data: {
                 title: postData.title,
                 description: postData.description,
-                imageUrl: postData.imageUrl,
+                imageUrl: postData.imageUrl ? postData.imageUrl: "",
                 user: {
                     connect: {
                         id: userId
@@ -207,6 +208,7 @@ app.post("/create-post", verifyToken, async (req, res) => {
             file.mv(newFilePath, async (error) => {
                 if (error) {
                     res.send({ error })
+                    return;
                 }
             });
             await prisma.imageUpload.create({
@@ -218,16 +220,16 @@ app.post("/create-post", verifyToken, async (req, res) => {
             })
         }
 
-        res.send({success: "Post created successfully"})
+        res.send({success: "Post created successfully!"})
 
     } catch (error) {
         console.log("Error creating post : ", error);
-        res.send({error: "Something went wrong."})
+        res.send({error: "Something went wrong, try again later!"})
         return;
     }
 });
 
-app.get("/get-posts", async ( req, res ) => {
+app.get("/get-posts", async ( req, res ) => {   
     
     try {
         const posts = await prisma.post.findMany({
@@ -265,7 +267,7 @@ app.get("/get-posts", async ( req, res ) => {
 app.post("/get-post", async (req,res) => {
     const { postId } = req.body;
     
-    console.log("",postId)
+    console.log("21331231231231",postId)
     
 
     try {
@@ -292,7 +294,10 @@ app.post("/get-post", async (req,res) => {
                         likes: true
                     }
                 },
-                comments:true,
+                comments: {
+                    orderBy: {created_at: "desc"},
+                    include: { user: true }
+                },
                 likes:true,
                 image:true
             }
@@ -315,7 +320,6 @@ app.post("/like-post", verifyToken, async (req, res) => {
     const userId = req.userId;
     const  { post }  = req.body;
 
-    console.log("q1231231ewqe123", post)
 
     try {
         const foundPost = await prisma.post.findUnique({
@@ -368,6 +372,116 @@ app.post("/like-post", verifyToken, async (req, res) => {
         }
     } catch (error) {
         console.log("Error liking or unliking post", error)
+    }
+});
+
+app.post("/comment-post", verifyToken, async (req, res) => {
+    const userId = req.userId;
+    console.log("userId from comment", userId)
+    const commentData = req.body;
+    console.log("commendata from comment", commentData);
+
+    try {
+        if (!userId) {
+            res.send({error: "You must be signed in to comment on a post!"});
+            return;
+        };
+
+        if (commentData.comment.length < 3) {
+            res.send({error: "You must write atleast 3 letter in your comment!"});
+            return;
+        };
+
+        if (!commentData.postId) {
+            res.send({error: "Error creating post due to no postId!"});
+            return;
+        };
+
+        const post = await prisma.post.findUnique({
+            where: { id: commentData.postId },
+        });
+
+        if (!post) {
+            res.send({error: "Cant find post with that postId!"});
+            return;
+        };
+
+        const requester = await prisma.user.findUnique({
+            where: { id: userId },
+        });  
+
+        if (!requester) {
+            res.send({error: "User not found!"});
+            return;
+        };
+
+        await prisma.comment.create({
+            data: {
+                post: { connect: { id: post.id }, },
+                user: { connect: { id: requester.id }, },
+                content: commentData.comment,
+            }
+        });
+
+        if (requester.id !== post.userId) {
+            await prisma.notification.create({
+                data: {
+                    user: { connect: { id: post.userId } },
+                    message: `${requester.userName ? requester.userName : requester.firstName} has commented on your post`,
+                }
+            })
+        };
+
+        res.send({success: "Comment has been added successfully!"});
+
+
+    } catch (error) {
+        console.log("Error commenting on post!", error); 
+        res.send({error: "Something went wrong, try again later!"});
+        return;
+    }
+});
+
+app.post("/delete-comment", verifyToken, async (req,res) => {
+    const userId = req.userId;
+    const commentId = req.body;
+    console.log("userId from delete comment", userId)
+    console.log("commentId from delete comment", commentId)
+    try {
+        const deleter = await prisma.user.findUnique({
+            where: {id: userId}
+        });
+
+        if (!deleter) {
+            res.send({error: "Could not delete comment. User not found!"});
+            return;
+        };
+
+        if (deleter.role !== "ADMIN") {
+            res.send({ error: "User role is not ADMIN, could not delete comment!" });
+            return;
+        };
+
+        const commentToDelete = await prisma.comment.findUnique({
+            where: {id: commentId.commentId}
+        });
+
+        if (!commentToDelete) {
+            res.send({error: "Could not find comment to delete!"});
+            return;
+        };
+
+        await prisma.comment.delete({
+            where: { id: commentId.commentId }
+        });
+
+        res.send({success: "Comment has been deleted!"});
+        
+
+    } catch (error) {
+        console.log("Error deleting comment!", error);
+        res.send({error: "Something went wrong deleting comment, try again later!"});
+        return;
     }
 });
 
