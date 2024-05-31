@@ -1,24 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import axiosInstance from "../lib/axiosInstance"
+import axiosInstance from "../lib/axiosInstance";
+import { toast } from "react-toastify";
 
 
-import { UserCircleIcon } from '@heroicons/react/24/solid'
+import { HeartIcon, UserCircleIcon } from '@heroicons/react/24/solid'
+import { useEffect, useState } from "react";
+
 
 export default function Comment(comment) {
 
+    const [isEditing, setIsEditing ] = useState(false);
+    const [ editCommentData, setEditCommentData ] = useState({
+        content: "",
+        commentId: ""
+    });
+
     const queryClient = useQueryClient();
 
-    const formatDateTime = (isoString) => {
-        const date = new Date(isoString);
-        const options = {
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-        };
-        return date.toLocaleString('en-US', options);
-    };
+    function formatTimeAgo(timestamp) {
+        const seconds = Math.floor((new Date() - new Date(timestamp)) / 1000);
+
+        let interval = Math.floor(seconds / 31536000);
+        if (interval > 1) {
+            return `${interval} years ago`;
+        }
+
+        interval = Math.floor(seconds / 2592000);
+        if (interval > 1) {
+            return `${interval} months ago`;
+        }
+
+        interval = Math.floor(seconds / 86400);
+        if (interval > 1) {
+            return `${interval} days ago`;
+        }
+
+        interval = Math.floor(seconds / 3600);
+        if (interval > 1) {
+            return `${interval} hours ago`;
+        }
+
+        interval = Math.floor(seconds / 60);
+        if (interval > 1) {
+            return `${interval} minutes ago`;
+        }
+
+        return `${Math.floor(seconds)} seconds ago`;
+    }
 
     const currentUser = useQuery({
         queryKey: ["currentUser"],
@@ -31,10 +59,65 @@ export default function Comment(comment) {
 
     const handleDeleteComment = (commentId) => {
         deleteComment.mutate(commentId)
-        queryClient.invalidateQueries(['post']);
-        console.log(commentId)
+        setTimeout(() => {
+            queryClient.invalidateQueries(["post"]);
+        }, 50);
+        toast("Comment has been deleted!")
     };
 
+    const editComment = useMutation({
+        mutationFn: (commentData) => axiosInstance.post("/edit-comment", { commentData }),
+        onSuccess: () => toast("Comment has been edited!")
+    });
+
+    const handleEditAndSubmit = (commentData) => {
+        if (isEditing) {
+            editComment.mutate(commentData);
+            setTimeout(() => {
+                queryClient.invalidateQueries(["post"]);
+                setIsEditing(!isEditing);
+            }, 50);
+        } else if (!isEditing) {
+            setIsEditing(!isEditing);
+        } else {
+            toast("Something went wrong try again later!");
+            return;
+        }
+    };
+
+    
+
+    const likeComment = useMutation({
+        mutationFn: () => axiosInstance.post("/like-comment", { comment }),
+        onSuccess: () => {
+            setTimeout(() => {
+                queryClient.invalidateQueries(["post"]);
+            }, 126);
+        }
+    });
+
+    useEffect(() => {
+        if (comment && comment.comment) {
+            setEditCommentData({
+                content: comment.comment.content,
+                commentId: comment.comment.id
+            })
+        }
+    }, [comment]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        setEditCommentData((prevCommentData) => ({
+            ...prevCommentData,
+            [name]: value
+        }));
+    };
+    
+
+    const isLiked = (comment, currentUser) => {
+        return comment.comment.likes.some(like => like.userId === currentUser?.id);
+    };
 
     if (comment.comment.length < 1) {
         return (
@@ -42,27 +125,71 @@ export default function Comment(comment) {
         )
     } else {
         return (
-            <div className="grid border-2 bg-primary grid-cols-6 p-1">
+            <div className="grid border-2 bg-default grid-cols-6 p-1">
                 <div className="col-span-1 flex flex-col">
-                    <div className="flex justify-center">
+                    <div className="flex justify-center my-auto">
                         {comment.comment.user.Profilemage !== null ?
                             <img src={comment.comment.user.Profilemage} />
                             :
                             <UserCircleIcon width={60} />
                         }
                     </div>
-                    <p className="text-center">{comment.comment.user.userName}</p>
                 </div>
-                <div className="col-span-3 overflow-y-scroll border-x-2 px-2 max-h-[70px]  ">
-                    <p className="text-pretty">{comment.comment.content}</p>
+                <div className="col-span-4 border-x-2 px-2">
+                    <p className="">{comment.comment.user.userName} -
+                        <span className={`${comment.comment.user.role === "ADMIN" ? "text-red-500" : "text-emerald-400"} ml-1 text-sm`}>{comment.comment.user.role}</span>
+                    </p>
+                    <p className="text-xs text-gray-400 ">{formatTimeAgo(comment.comment.created_at)}</p>
+                    <div className="overflow-y-auto scroll-smooth  max-h-[70px]">
+                        {isEditing ? 
+                        <input
+                            name="content"
+                            className="rounded-md text-sm px-1 py-1 w-full"
+                            value={editCommentData.content}
+                            onChange={handleChange}
+                            type="text"
+                        />
+                        :
+                        <p className="text-pretty">{comment.comment.content}</p>
+                        }
+                    </div>
                 </div>
-                <div className="col-span-2 flex flex-col items-center justify-center">
-                    {currentUser.data.data.success.role === "ADMIN" ? 
-                        <button onClick={() => handleDeleteComment(comment.comment.id)} className="bg-important text-white rounded-xl py-1 px-2 hover:brightness-75">Delete comment!</button>
+                <div className="col-span-1 w-full flex flex-col ">
+                    <button
+                        className="flex mx-auto my-auto"
+                        onClick={() => likeComment.mutate()}>
+                        {!isLiked(comment, currentUser.data.data.success) ?
+                            <div 
+                                className="flex justify-center items-center"> 
+                                <HeartIcon width={25} />{comment.comment.likes.length > 0 ? (comment.comment.likes.length) : null}
+                            </div>
+                            :
+                            <div 
+                                className="flex relative">
+                                <HeartIcon color="red" fill="red" width={25} />
+                                <span className="font-semibold">
+                                    {comment.comment.likes?.length > 0 ? (comment.comment.likes.length) : null}
+                                </span>
+                            </div>
+                        }
+                    </button>
+                    {currentUser?.data?.data?.success?.id === comment.comment.userId && 
+                        <button
+                            onClick={() => handleEditAndSubmit(editCommentData)}
+                            className="bg-important px-2 mt-auto text-white text-xs text-nowrap rounded-xl py-1  hover:brightness-75"
+                        >
+                            {isEditing ? "Submit" : "Edit"}
+                        </button>
+                    }
+                    {currentUser?.data?.data?.success?.role === "ADMIN" ? 
+                        <button 
+                            onClick={() => handleDeleteComment(comment.comment.id)} 
+                            className="bg-red-500 px-2 mt-auto text-white text-xs text-nowrap rounded-xl py-1  hover:brightness-75">
+                            Delete!
+                        </button>
                     :null
                     }
-                    <button onClick={() => console.log(deleteComment)}>testtesttest</button>
-                    <p className="text-tiny font-thin">{formatDateTime(comment.comment.created_at)}</p>
+                    
                 </div>
             </div>
         )

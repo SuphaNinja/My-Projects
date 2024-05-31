@@ -7,6 +7,7 @@ import SignUp from "./pages/SignUp";
 import NavBar from "./components/NavBar";
 import Login from "./pages/Login";
 import CreatePost from "./pages/CreatePost";
+import EditPost from "./pages/EditPost";
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/signup" element={<SignUp/>}/>
         <Route path="/login" element={<Login />} />
         <Route path="/createpost" element={<CreatePost />} />
+        <Route path="/editpost/:postId" element={<EditPost />} />
       </Routes>
     </div>
   );

@@ -18,3 +18,18 @@ html, body {
   -webkit-scrollbar {
   display: none; }
 }
+
+.scroll-smooth {
+  scroll-behavior: smooth;
+}
+
+.scroll-snap-container {
+  scroll-snap-type: y proximity;
+}
+
+.scroll-snap-child {
+  scroll-snap-align: start;
+  scroll-margin-top: 5px; /* Adjust as needed for smoother effect */
+}
+
+

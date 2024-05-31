@@ -5,6 +5,7 @@ const cors = require("cors");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const fileUpload = require("express-fileupload");
+const fs = require('fs');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -172,6 +173,15 @@ app.post("/create-post", verifyToken, async (req, res) => {
     try {
         const file = req.files ? req.files.file : null;
 
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            res.send({ error: "User not found!" });
+            return;
+        }
+
         if (!postData.title) {
             res.send({error: "Title field cannot be left empty!"});
             return;
@@ -253,7 +263,8 @@ app.get("/get-posts", async ( req, res ) => {
                         likes:true
                     }
                 }
-            }
+            },
+            orderBy: { created_at: "desc" }
         });
         res.send({ posts });
     } catch (error) {
@@ -296,7 +307,7 @@ app.post("/get-post", async (req,res) => {
                 },
                 comments: {
                     orderBy: {created_at: "desc"},
-                    include: { user: true }
+                    include: { user: true, likes:true }
                 },
                 likes:true,
                 image:true
@@ -326,7 +337,7 @@ app.post("/like-post", verifyToken, async (req, res) => {
             where: { id: post.id}
         });
 
-        if (!post) {
+        if (!foundPost) {
             console.log("heeelellelel")
             res.send({error: "Could not find post with that id!"});
             return;
@@ -372,6 +383,134 @@ app.post("/like-post", verifyToken, async (req, res) => {
         }
     } catch (error) {
         console.log("Error liking or unliking post", error)
+    }
+});
+
+app.post("/edit-post", verifyToken, async (req, res) => {
+    
+    const userId = req.userId;
+
+    const postData = req.body;
+
+    console.log("updating post with postData, :", postData);
+
+
+
+    try {
+        const file = req.files ? req.files.file : null;
+
+        const user = await prisma.user.findUnique({
+            where: {id: userId}
+        });
+
+        if (!user) {
+            res.send({ error: "User not found!" });
+            return;
+        };
+        
+        if (user.role !== "ADMIN") {
+            res.send({ error: "Unauthorized edit of post. User not ADMIN!" });
+            return;
+        };
+
+        const foundPost = await prisma.post.findUnique({
+            where: {id: postData.postId}
+        });
+
+        if (!foundPost) {
+            res.send({ error: "Could not find post to edit!" });
+            return;
+        }
+
+        if (!postData.imageUrl && !postData.title && !postData.description && !file) {
+            res.send({ error: "You must edit atleast one thing!" });
+            return;
+        };
+
+        const updatedPost = await prisma.post.update({
+            where:{id: foundPost.id},
+            data: {
+                title: postData.title || undefined,
+                description: postData.description || undefined,
+                imageUrl: postData.imageUrl || undefined,
+            }
+        });
+
+
+        if (updatedPost && file) {
+            const fileExtension = path.extname(file.name);
+            const newFileName = `${updatedPost.id}${fileExtension}`;
+            const newFilePath = path.join(__dirname, 'images', newFileName);
+
+            if (fs.existsSync(newFilePath)) {
+                res.send({ error: 'File with that name on this post already exists' });
+                return;
+            }
+
+            file.mv(newFilePath, async (error) => {
+                if (error) {
+                    res.send({ error })
+                    return;
+                }
+            });
+            await prisma.imageUpload.create({
+                data: {
+                    fileName: newFileName,
+                    filePath: "/images/" + newFileName,
+                    postId: updatedPost.id
+                }
+            })
+        }
+
+        res.send({ success: "Post updated successfully!" })
+
+    } catch (error) {
+        console.log("Error updateding post :", error);
+        res.send({ error: "Something went wrong, try again later!" })
+        return;
+    }
+});
+
+app.post("/delete-post", verifyToken, async (req, res) => {
+    const userId = req.userId;
+    const postId = req.body;
+    console.log("userId from delete comment", userId)
+    console.log("postId from delete comment", postId.postId)
+    try {
+        const deleter = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!deleter) {
+            res.send({ error: "Could not delete post. User not found!" });
+            return;
+        };
+
+        if (deleter.role !== "ADMIN") {
+            res.send({ error: "User role is not ADMIN, could not delete post!" });
+            return;
+        };
+
+        const postToDelete = await prisma.post.findUnique({
+            where: { id: postId.postId }
+        });
+
+        if (!postToDelete) {
+            res.send({ error: "Could not find Post to delete!" });
+            return;
+        };
+
+        await prisma.post.delete({
+            where: { id: postId.postId }
+        });
+
+        res.send({ success: "Post has been deleted!" });
+
+
+    } catch (error) {
+        console.log("Error deleting Post!", error);
+        res.send({ error: "Something went wrong deleting post, try again later!" });
+        return;
     }
 });
 
@@ -438,6 +577,116 @@ app.post("/comment-post", verifyToken, async (req, res) => {
     } catch (error) {
         console.log("Error commenting on post!", error); 
         res.send({error: "Something went wrong, try again later!"});
+        return;
+    }
+});
+
+app.post("/like-comment", verifyToken, async (req, res) => {
+    const userId = req.userId;
+    const { comment } = req.body;
+    console.log("logging liking comment : ", comment.comment.id)
+
+    try {
+        const foundComment = await prisma.comment.findUnique({
+            where: { id: comment.comment.id }
+        });
+
+        if (!foundComment) {
+            res.send({ error: "Could not find comment with that id!" });
+            return;
+        };
+
+        const requester = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!requester) {
+            res.send({ error: "Could not find user with that userId!" });
+            return;
+        };
+
+        const like = await prisma.like.findFirst({
+            where: { commentId: foundComment.id, userId: requester.id }
+        });
+
+        if (like) {
+            await prisma.like.delete({
+                where: { id: like.id }
+            });
+            res.send({ success: "Unliked Post!" });
+            return;
+        } else {
+            await prisma.like.create({
+                data: {
+                    comment: { connect: { id: foundComment.id } },
+                    user: { connect: { id: requester.id } }
+                }
+            });
+
+            if (requester.id !== foundComment.userId) {
+                await prisma.notification.create({
+                    data: {
+                        user: { connect: { id: foundComment.userId } },
+                        message: `${requester.userName} has liked your comment`,
+                    }
+                })
+            }
+            res.send({ success: "Liked Comment!" });
+            return;
+        }
+    } catch (error) {
+        console.log("Error liking or unliking comment", error)
+    }
+});
+
+app.post("/edit-comment", verifyToken, async (req, res) => {
+
+    const userId = req.userId;
+
+    const commentData = req.body;
+
+    console.log("updating comment with commentData, :", commentData.commentData.commentId);
+
+
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            res.send({ error: "User not found!" });
+            return;
+        };
+
+        const foundComment = await prisma.comment.findUnique({
+            where: { id: commentData.commentData.commentId }
+        });
+
+        if (!foundComment) {
+            res.send({ error: "Could not find comment to edit!" });
+            return;
+        }
+
+        if (commentData.commentData.content === foundComment.content){
+            res.send({ error: "No changes to edit!" });
+            return;
+        }
+
+        const updatedComment = await prisma.comment.update({
+            where: { id: foundComment.id },
+            data: {
+                content: commentData.commentData.content || undefined
+            }
+        });
+
+
+
+        res.send({ success: "Comment updated successfully!" })
+
+    } catch (error) {
+        console.log("Error updating comment :", error);
+        res.send({ error: "Something went wrong, try again later!" })
         return;
     }
 });
