@@ -8,6 +8,7 @@ import NavBar from "./components/NavBar";
 import Login from "./pages/Login";
 import CreatePost from "./pages/CreatePost";
 import EditPost from "./pages/EditPost";
+import Profile from "./pages/Profile";
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/createpost" element={<CreatePost />} />
         <Route path="/editpost/:postId" element={<EditPost />} />
+        <Route path="/profile/:userId" element={<Profile />} />
       </Routes>
     </div>
   );

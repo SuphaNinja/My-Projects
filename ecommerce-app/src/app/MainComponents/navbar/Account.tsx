@@ -1,12 +1,9 @@
-"use client"
+"use client";
 import { BriefcaseIcon, HeartIcon, MapPinIcon, UserIcon } from "@heroicons/react/16/solid";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 
-
-
 export default function Account({ signOut }: any) {
-
     const { data: session } = useSession();
 
     return (
@@ -27,5 +24,5 @@ export default function Account({ signOut }: any) {
                 </div>
             }
         </div>
-    )
+    );
 }

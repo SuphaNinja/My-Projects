@@ -159,7 +159,7 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
     return (
         <div ref={blogRef} className="h-full max-h-screen md:max-h-[88vh] border-b-2 border-black md:border-none flex flex-col items-center">
             <div className={`md:w-5/6 w-full hover:brightness-90 md:border-2 md:rounded-xl md:border-black h-full md:h-[88vh]  md:overflow-hidden md:flex-col bg-primary`}>
-                <div className="relative bg-red-500  md:h-3/6 w-full h-7/12">
+                <div className="relative bg-gradient-to-b from-slate-500 to-slate-200  md:h-3/6 w-full h-7/12">
                     {imageSrcList.length > 1 &&
                         <button 
                             onClick={prevImageIndex} 
@@ -195,34 +195,38 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
                             <p>Posted by: {post.user.userName}</p>
                             <p>Posted at: {formatDateTime(post.created_at)}</p>   
                         </div> 
-                        <button onClick={() => setIsVeiwingComments(!isViewingComments)}>
+                        <button 
+                            className=" font-semibold text-sm md:text-md hover:underline text-center"
+                            onClick={() => setIsVeiwingComments(!isViewingComments)}>
                             {isViewingComments ? "Close comments": "View comments"}
                         </button>
-                        {currentUser.isSuccess && currentUser?.data?.data?.success?.role !== "ADMIN"?
-                            <button
-                                className="flex items-center justify-center md:ml-6 md:mr-2 md:-mb-2"
-                                onClick={() => likePost.mutate()}>
-                                {!isLiked(post, currentUser.data.data.success) ? 
-                                    <div className="flex"> <HeartIcon width={35}  />{post.likes.length > 0 ? (post.likes.length) : null}</div>
-                                    : 
-                                    <div className="flex"><HeartIcon color="red" fill="red" width={35} />{post.likes.length > 0 ? (post.likes.length) : null}</div>
-                                }
-                            </button>
-                            : 
-                            <div className="ml-auto">
-                                <Link
-                                    to={`/editpost/${post.id}`}
-                                    className="text-center hover:brightness-90 hover:underline text-white mr-2 bg-important rounded-xl py-1 px-4" >
-                                        Edit post
-                                </Link>
+                        {currentUser.isSuccess && 
+                            <div className="flex items-center gap-2">
                                 <button
-                                    onClick={() => handleDeletePost(post.id)}
-                                    className="text-center hover:brightness-90 hover:underline text-white mr-2 bg-red-500 rounded-xl py-1 px-4" >
-                                        Delete Post
+                                    className="flex md:items-center md:justify-center md:ml-6 md:mr-2 md:-mb-2"
+                                    onClick={() => likePost.mutate()}>
+                                    {!isLiked(post, currentUser.data.data.success) ? 
+                                        <div className="flex"> <HeartIcon width={35}  />{post.likes.length > 0 ? (post.likes.length) : null}</div>
+                                        : 
+                                        <div className="flex"><HeartIcon color="red" fill="red" width={35} />{post.likes.length > 0 ? (post.likes.length) : null}</div>
+                                    }
                                 </button>
+                            {currentUser?.data?.data?.success?.role === "ADMIN" &&
+                                <div className="md:ml-auto flex flex-col gap-2">
+                                    <Link
+                                        to={`/editpost/${post.id}`}
+                                        className="text-center hover:brightness-90 hover:underline text-sm md:text-md text-white md:mr-2 bg-important rounded-xl px-1 py-1 md:px-4" >
+                                        Edit post
+                                    </Link>
+                                    <button
+                                        onClick={() => handleDeletePost(post.id)}
+                                            className="text-center hover:brightness-90 hover:underline text-sm md:text-md text-white md:mr-2 bg-red-500 rounded-xl px-1 py-1 md:px-4" >
+                                        Delete Post
+                                    </button>
+                                </div>
+                            }
                             </div>
-                        }   
-                              
+                        }  
                     </div>
                     
                 </div>

@@ -21,3 +21,11 @@
     text-wrap: balance;
   }
 }
+
+
+@media (max-width: 640px) {
+    .navbar-button-hidden {
+        display: none;
+    }
+}
+

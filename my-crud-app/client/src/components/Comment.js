@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 
 import { HeartIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 
 export default function Comment(comment) {
@@ -136,9 +137,9 @@ export default function Comment(comment) {
                     </div>
                 </div>
                 <div className="col-span-4 border-x-2 px-2">
-                    <p className="">{comment.comment.user.userName} -
+                    <Link to={`/profile/${comment.comment.user.id}`} className=" hover:underline">{comment.comment.user.userName} -
                         <span className={`${comment.comment.user.role === "ADMIN" ? "text-red-500" : "text-emerald-400"} ml-1 text-sm`}>{comment.comment.user.role}</span>
-                    </p>
+                    </Link>
                     <p className="text-xs text-gray-400 ">{formatTimeAgo(comment.comment.created_at)}</p>
                     <div className="overflow-y-auto scroll-smooth  max-h-[70px]">
                         {isEditing ? 

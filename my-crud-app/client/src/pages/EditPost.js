@@ -118,28 +118,31 @@ export default function EditPost () {
     if (post.isLoading) { return ( <div>Loading...</div> ) };
     if (post.isSuccess) {
         return (
-            <div className="md:mx-48 flex flex-col items center">
-                <div className="h-[88vh] border-b-2 shadow-red-600 shadow-md border-slate-500 pb-2 mt-4 overflow-hidden rounded-md">
+            <div
+                className="w-full h-auto flex items-center justify-center bg-cover bg-center"
+                style={{ backgroundImage: "url('https://png.pngtree.com/thumb_back/fh260/background/20230720/pngtree-blue-and-purple-neon-star-3d-art-background-with-a-cool-image_3705286.jpg')" }}
+            >
+                <div className="md:h-[90vh] md:mb-2 h-screen text-white md:mx-48 bg-slate-500/70 border-2 w-full mt-16 shadow-red-600 md:shadow-md border-slate-500 pb-2 md:mt-4 overflow-hidden rounded-md">
                     <div className="relative h-1/2 w-full">
                         <button onClick={prevImageIndex} className="z-10 h-full w-1/3 hover:bg-slate-500/30 transition-colors absolute top-0 left-0"></button>
                             <img
                                 src={imageSrcList[imageIndex]}
                                 alt={`Image ${imageIndex}`}
-                                className={`w-full rounded-t-xl h-full  ${transitioning ? 'transition-opacity duration-500 opacity-0' : ''}`}
+                            className={`w-full shadow-xl  h-full  ${transitioning ? 'transition-opacity duration-500 opacity-0' : ''}`}
                             /> 
                         <button onClick={nextImageIndex} className="z-10 h-full w-1/3 hover:bg-slate-500/30 transition-colors absolute top-0 right-0"></button>
                     </div>
-                    <p className="text-2xl font-semibold text-center border-b-2 border-x-2 border-slate-700">Edit Post</p>
+                    <p className="text-2xl font-semibold text-center border-b-2">Edit Post</p>
                     <div className="grid grid-cols-6 h-1/2 w-full">
-                        <div className="bg-emerald-500 col-span-1">
+                        <div className="bg-emerald-500 md:block hidden col-span-1">
                             <img
                                 src="https://media.istockphoto.com/id/465504593/photo/golden-temple-dragon.jpg?s=612x612&w=0&k=20&c=XEshhnJCEdbAL1mAj3-USS2Dt1UXoRhgXuq3gvzBG3Y="
-                                className=""
+                                className="h-full"
                             />
                         </div>
                         <form
                             onSubmit={(e) => { e.preventDefault(); update(formData) }}
-                            className="flex flex-col justify-evenly pb-4 px-2 col-span-4 "
+                            className="flex flex-col px-2  justify-evenly md:pb-4 col-span-6 md:px-6 md:col-span-4 "
                         >
                             <div className=" font-medium">
                                 <p>Title</p>
@@ -174,23 +177,20 @@ export default function EditPost () {
                                     type="text"
                                 />
                             </div>
-                            <div className="w-full grid grid-cols-3">
-                                <div className="col-span-1 font-medium">
-                                    <p>ImageFile <br/><span className="text-tiny font-light">You can add multiple files on one post!</span></p>
+                            <div className="w-full gap-2 grid grid-cols-2 col-span-2 md:col-span-1">
+                                <div className="flex md:flex-col col-span-2 md:col-span-1 font-medium">
+                                    <p>ImageFile <br/><span className="text-tiny text-prettyfont-light">You can add multiple files on one post!</span></p>
                                     <input
                                         onChange={handleFileChange}
                                         type="file"
-                                        className="text-sm text-stone-500file:mr-5 file:py-1 file:px-3 file:border-[1px]file:text-xs file:font-medium file:bg-stone-50 file:text-stone-700hover:file:cursor-pointer hover:file:bg-blue-50 hover:file:text-blue-700"
+                                        className="text-xs md:text-sm my-auto text-stone-500file:mr-5 file:py-1 file:px-3 file:border-[1px]file:text-xs file:font-medium file:bg-stone-50 file:text-stone-700hover:file:cursor-pointer hover:file:bg-blue-50 hover:file:text-blue-700"
 
                                     />
-                                </div>
-                                <div className="col-span-1 flex justify-center">
-                                    <div className="bg-gradient-to-b from-emerald-500 to-cyan-500 h-full w-1" />
-                                </div>
-                                <div className="flex col-span-1">
+                                </div>      
+                                <div className="flex items-center mt-2 md:mt-0 col-span-2 md:col-span-1">
                                     <button 
                                         type="submit" 
-                                        className="text-center text-lg bg-important hover:underline transition-all hover:brightness-100 brightness-75 text-white px-2 rounded-xl">
+                                        className="text-center md:mx-auto w-full text-lg bg-slate-700/80 hover:underline transition-all hover:brightness-100 brightness-75 text-white py-1 px-2 rounded-xl">
                                             Update Post!
                                     </button>
                                 </div>
@@ -198,10 +198,10 @@ export default function EditPost () {
                             {updatePost.data?.data?.success && <p className="bg-emerald-500 py-1 mb-2 text-center font-semibold rounded-full">{updatePost.data.data.success}</p>}
                             {updatePost.data?.data?.error && <p className="bg-red-500 py-1 mb-2 text-center font-semibold rounded-full">{updatePost.data.data.error}</p>}
                         </form>
-                        <div className="col-span-1 h-full">
+                        <div className="col-span-1 md:block hidden object-fill h-full">
                             <img 
                                 src="https://media.istockphoto.com/id/465504593/photo/golden-temple-dragon.jpg?s=612x612&w=0&k=20&c=XEshhnJCEdbAL1mAj3-USS2Dt1UXoRhgXuq3gvzBG3Y="
-                                className=""
+                                className="h-full"
                             />
                         </div>
                     </div>

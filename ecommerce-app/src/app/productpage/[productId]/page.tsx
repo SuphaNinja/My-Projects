@@ -104,7 +104,7 @@ export default function ProductPage() {
                     <div className="flex-col flex w-3/4 justify-center mx-auto ">
                         <button></button>
                         <div className="flex w-full justify-center gap-8">
-                            {product.data.images.map((image: string, index: number) => (
+                            {product.data?.images?.map((image: string, index: number) => (
                                 <div key={index} className={`flex p-2 border-2  rounded-md ${index === imageIndex ? "border-yellow-500" : "border-slate-400"}`}>
                                     <button onClick={() => setImageIndex(index)}>
                                         <img src={image} className="size-16 object-cover" alt="product image" />
@@ -136,11 +136,11 @@ export default function ProductPage() {
                             <hr className="w-full mt-2" />
                             <div className="w-full flex flex-col">
                                 <div className="flex flex-col gap-2">
-                                    <p className="font-bold">{product.data.brand}</p>
-                                    <p className="font-bold text-xl">{product.data.title}</p>
-                                    <p className="text-lg">{product.data.description}</p>
+                                    <p className="font-bold">{product.data?.brand}</p>
+                                    <p className="font-bold text-xl">{product.data?.title}</p>
+                                    <p className="text-lg">{product.data?.description}</p>
                                     <div className="flex gap-2">
-                                        <StarRating rating={product.data.rating} />
+                                        <StarRating rating={product.data?.rating} />
                                         <p className="font-semibold">{product.data.rating} Rating</p>
                                     </div>
                                     <div className='flex mt-2'>

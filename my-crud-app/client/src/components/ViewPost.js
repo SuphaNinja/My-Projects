@@ -71,12 +71,12 @@ export default function ViewPost({ postId, setIsVeiwingComments, isViewingCommen
             <div className={`flex z-50 flex-col md border-t-4 md:border-l-4 border-slate-700 bg-default w-full h-[40vh] md:h-[90vh]`}>
                 <p className="font-semibold text-md md:text-xl text-center">{post?.data?.data?.post?.title}</p>
                 <div className="h-full flex flex-col">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between mx-6">
                         <p className="md:text-xl text-sm font-semibold text-center underline">
                             Comments
-                            <span className=" ml-2">({post.data?.data?.post.comments.length})</span>
+                            <span className="ml-2">({post.data?.data?.post.comments.length})</span>
                         </p>
-                        <button onClick={() => setIsVeiwingComments(!isViewingComments)}>Close</button>
+                        <button className="hover:underline" onClick={() => setIsVeiwingComments(!isViewingComments)}>Close</button>
                     </div>
                     <div className="overflow-y-auto no-scrollbar my-2 md:border-y-4 h-4/6">
                         <div className="flex flex-col ">

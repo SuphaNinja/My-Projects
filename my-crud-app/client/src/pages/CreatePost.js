@@ -68,8 +68,8 @@ export default function CreatePost () {
     
 
     return ( 
-        <div className="w-full mt-24 flex justify-center" >
-            <div className="bg-secondary rounded-md  p-8 flex flex-col justify-center ">
+        <div className="w-full  md:mt-24 flex justify-center" >
+            <div className="bg-secondary md:w-auto w-full md:rounded-md p-8 flex flex-col justify-center">
                 <p className="text-xl text-center font-semibold">Create a post!</p>
                 <form 
                     onSubmit={(e) => {e.preventDefault(); post(formData)}} 
@@ -110,7 +110,7 @@ export default function CreatePost () {
                             type="text"
                         />
                     </div>
-                    <div className="col-span-1 font-medium">
+                    <div className="col-span-2 md:col-span-1 font-medium">
                         <p>ImageFile</p>
                         <input
                             onChange={handleFileChange}
@@ -119,7 +119,7 @@ export default function CreatePost () {
 
                         />
                     </div>
-                    <div className="col-span-1 flex items-center mt-4 justify-center">
+                    <div className="col-span-2 md:col-span-1 flex items-center mt-4 justify-center">
                         <button type="submit" className="text-center text-lg bg-important hover:underline transition-all hover:brightness-100 brightness-75 text-white px-4 py-2 rounded-xl">Create Post!</button>
                     </div>
                     {createPost.isSuccess && <p className="p-4 col-span-2 text-xl text-center bg-green-500 font-semibold">{createPost.data.data.success}</p>}

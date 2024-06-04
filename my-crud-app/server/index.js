@@ -21,6 +21,7 @@ app.use(cors(corsOptions));
 app.use(fileUpload());
 app.use("/images", express.static(__dirname + "/images"));
 
+//---------------------------------------VERIFY TOKEN---------------------------------------------------------
 
 const verifyToken = (req, res, next) => {
     const token = req.headers["x-access-token"];
@@ -37,7 +38,7 @@ const verifyToken = (req, res, next) => {
 };
 
 
-
+//---------------------------------------CREATE NEW USER---------------------------------------------------------
 
 app.post("/create-new-user", async ( req, res) => {
     const signUpData = req.body;
@@ -95,6 +96,9 @@ app.post("/create-new-user", async ( req, res) => {
     }
 });
 
+
+//--------------------------------------LOGIN---------------------------------------------------------
+
 app.post("/login", async (req,res) => {
 
     const loginData = req.body;
@@ -131,6 +135,9 @@ app.post("/login", async (req,res) => {
     });
 });
 
+
+//---------------------------------------GET CURRENT USER---------------------------------------------------------
+
 app.get("/get-current-user", verifyToken, async (req,res) => {
     const userId = req.userId;
 
@@ -141,7 +148,12 @@ app.get("/get-current-user", verifyToken, async (req,res) => {
                 posts: true,
                 comments: true,
                 likes: true,
-                notifications: true,
+                notifications: {
+                     orderBy: [
+                        { read: 'asc' },
+                        { created_at: 'desc' } 
+                    ]
+                },
 
             }
         });
@@ -157,19 +169,104 @@ app.get("/get-current-user", verifyToken, async (req,res) => {
     }
 });
 
-app.get("/get-user", async (req,res) => {
-    const userId = req.body;
+
+//---------------------------------------UPDATE USER PROFILE---------------------------------------------------------
+
+
+app.post("/edit-profile", verifyToken, async (req, res) => {
+
+    const userId = req.userId;
+
+    const updateData = req.body;
+    try {
+        const user = await prisma.user.findUnique({
+            where: { email: updateData.email}
+        });
+        
+        if (!user) {
+            res.send({ error: "User not found!" });
+            return;
+        };
+
+        let hashedPassword;
+        if (user.password !== updateData.password) {
+            hashedPassword = bcrypt.hashSync(updateData.password, 10);
+        }
+    
+       
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                firstName: updateData.firstName || undefined,
+                lastName: updateData.lastName || undefined,
+                userName: updateData.userName || undefined,
+                profilemage: updateData.profilemage || undefined,
+                password: hashedPassword ? hashedPassword : undefined
+                
+            }
+        });
+
+        
+
+  
+
+
+
+
+    } catch (error) {
+        console.log("Error updating profile :", error);
+        res.send({ error: "Something went wrong, try again later!" })
+        return;
+    }
+});
+
+//---------------------------------------GET USER BY ID---------------------------------------------------------
+
+app.post("/get-user", verifyToken, async (req,res) => {
+    const userId = req.userId;
+    const profileUserId = req.body;
+
+
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: profileUserId.params.userId },
+            include: {
+                comments:true,
+                notifications:true,
+                likes:true,
+                posts: {
+                    include: { image:true }
+                }
+            }
+        });
+
+        if (!user) {
+            res.send({error: "User could not be found!"});
+            return;
+        }
+
+        if (userId === profileUserId.params.userId) {
+            res.send({ user })
+        } else {
+            const { password, ...userWithoutPass } = user;
+            res.send({ user: userWithoutPass });
+        }
+
+        
+        
+    } catch (error) {
+        console.log("Error getting profile with userId", error);
+        res.send({error: "Something went wrong, please try again later!"});
+        return;
+    }
 });
 
 
+//---------------------------------------CREATE NEW POST---------------------------------------------------------
+
 app.post("/create-post", verifyToken, async (req, res) => {
-    console.log(req.body)
     const userId = req.userId;
-
     const postData = req.body;
-
-    
-
     try {
         const file = req.files ? req.files.file : null;
 
@@ -208,7 +305,6 @@ app.post("/create-post", verifyToken, async (req, res) => {
             }
         });
        
-
         if (createdPost && file) {
             const fileExtension = path.extname(file.name);
             const newFileName = `${createdPost.id}${fileExtension}`;
@@ -239,8 +335,10 @@ app.post("/create-post", verifyToken, async (req, res) => {
     }
 });
 
+
+//---------------------------------------GET ALL POSTS---------------------------------------------------------
+
 app.get("/get-posts", async ( req, res ) => {   
-    
     try {
         const posts = await prisma.post.findMany({
             where: {},
@@ -256,7 +354,7 @@ app.get("/get-posts", async ( req, res ) => {
                         userName:true,
                         email:true,
                         role:true,
-                        Profilemage:true,
+                        profilemage:true,
                         posts:true,
                         comments:true,
                         notifications:true,
@@ -274,6 +372,9 @@ app.get("/get-posts", async ( req, res ) => {
     }
 
 });
+
+
+//---------------------------------------GET POST BY ID---------------------------------------------------------
 
 app.post("/get-post", async (req,res) => {
     const { postId } = req.body;
@@ -298,7 +399,7 @@ app.post("/get-post", async (req,res) => {
                         userName: true,
                         email: true,
                         role: true,
-                        Profilemage: true,
+                        profilemage: true,
                         posts: true,
                         comments: true,
                         notifications: true,
@@ -326,6 +427,9 @@ app.post("/get-post", async (req,res) => {
         return;
     }
 });
+
+
+//---------------------------------------LIKE POST---------------------------------------------------------
 
 app.post("/like-post", verifyToken, async (req, res) => {
     const userId = req.userId;
@@ -385,6 +489,9 @@ app.post("/like-post", verifyToken, async (req, res) => {
         console.log("Error liking or unliking post", error)
     }
 });
+
+
+//--------------------------------------EDIT POST---------------------------------------------------------
 
 app.post("/edit-post", verifyToken, async (req, res) => {
     
@@ -471,6 +578,10 @@ app.post("/edit-post", verifyToken, async (req, res) => {
     }
 });
 
+
+
+//---------------------------------------DELETE POST--------------------------------------------------------
+
 app.post("/delete-post", verifyToken, async (req, res) => {
     const userId = req.userId;
     const postId = req.body;
@@ -513,6 +624,9 @@ app.post("/delete-post", verifyToken, async (req, res) => {
         return;
     }
 });
+
+
+//---------------------------------------COMMENT ON POST---------------------------------------------------------
 
 app.post("/comment-post", verifyToken, async (req, res) => {
     const userId = req.userId;
@@ -581,6 +695,9 @@ app.post("/comment-post", verifyToken, async (req, res) => {
     }
 });
 
+
+//---------------------------------------LIKE COMMENT---------------------------------------------------------
+
 app.post("/like-comment", verifyToken, async (req, res) => {
     const userId = req.userId;
     const { comment } = req.body;
@@ -639,6 +756,9 @@ app.post("/like-comment", verifyToken, async (req, res) => {
     }
 });
 
+
+//---------------------------------------EDIT COMMENT---------------------------------------------------------
+
 app.post("/edit-comment", verifyToken, async (req, res) => {
 
     const userId = req.userId;
@@ -691,6 +811,9 @@ app.post("/edit-comment", verifyToken, async (req, res) => {
     }
 });
 
+
+//---------------------------------------DELETE COMMENT---------------------------------------------------------
+
 app.post("/delete-comment", verifyToken, async (req,res) => {
     const userId = req.userId;
     const commentId = req.body;
@@ -730,6 +853,33 @@ app.post("/delete-comment", verifyToken, async (req,res) => {
     } catch (error) {
         console.log("Error deleting comment!", error);
         res.send({error: "Something went wrong deleting comment, try again later!"});
+        return;
+    }
+});
+
+
+//---------------------------------------UPDATE NOTIFICATION---------------------------------------------------------
+
+app.post("/update-notification", async (req, res) => {
+    const notification = req.body;
+    console.log("Editing notification: ", notification.notificationId);
+
+
+    try {
+        const notificationToEdit = await prisma.notification.update({
+            where: {id: notification.notificationId},
+            data: { read: true}
+        });
+
+        if (!notificationToEdit) {
+            res.send({error: "No notification found!"});
+            return;
+        };
+        res.send({success: "Notification read!"})
+
+    } catch (error) {
+        console.log("Error editing notification:", error);
+        res.send({error: "Something went wrong, please try again later!"});
         return;
     }
 });
