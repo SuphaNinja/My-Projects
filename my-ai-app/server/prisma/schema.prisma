@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  firstName     String?
+  lastName      String?
+  userName      String?
+  email         String   @unique
+  role          String   @default("USER") // Can be "ADMIN", "TRAINER", or "USER"
+  password      String
+  profileImage  String?
+
+  trainerId     String?
+  trainer       User?    @relation("TrainerClients", fields: [trainerId], references: [id])
+  clients       User[]   @relation("TrainerClients")
+  guides        Guide[]
+}
+
+model Guide {
+  id              Int      @id @default(autoincrement())
+  tipsToReachGoal String
+  days            Day[]
+  clientId        String
+  client          User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model Day {
+  id          Int            @id @default(autoincrement())
+  dayNumber   Int
+  guideId     Int
+  guide       Guide          @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  mealPlans   MealPlan[]
+  exercises   WorkoutExercise[]
+}
+
+model MealPlan {
+  id           Int              @id @default(autoincrement())
+  mealType     String
+  dayId        Int
+  day          Day              @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  ingredients  Ingredient[]     
+}
+
+model Ingredient {
+  id        Int      @id @default(autoincrement())
+  name      String
+  grams     String
+  calories  String
+  mealPlanId Int
+  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+}
+
+
+
+model WorkoutExercise {
+  id             Int     @id @default(autoincrement())
+  exerciseName   String
+  time           String
+  burnedCalories String
+  dayId          Int
+  day            Day     @relation(fields: [dayId], references: [id], onDelete: Cascade)
+}
+
