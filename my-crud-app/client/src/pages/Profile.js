@@ -233,7 +233,7 @@ export default function Profile () {
                             <div className="flex border-b-2 md:hidden justify-between px-12">
                                 {user.id === currentUser.data.data.success.id &&
                                     <button
-                                        onClick={() => setActiveComponent('notifications')}
+                                        onClick={() => setActiveComponent('guides')}
                                         className={`md:text-xl transition-all hover:font-semibold hover:underline ${activeComponent === 'notifications' ? " text-white font-semibold underline" : "text-slate-300"}`}>
                                         Notifications
                                     </button>
