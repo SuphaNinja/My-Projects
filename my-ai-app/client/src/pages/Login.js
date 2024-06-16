@@ -27,7 +27,6 @@ export default function Login() {
             setTimeout(() => {
                 navigate("/")
                 window.location.reload();
-
             }, 2000);
         }
     });

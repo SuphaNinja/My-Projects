@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import axiosInstance from "../lib/axiosInstance";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -11,9 +12,11 @@ export default function NavBar() {
     const token = localStorage.getItem("token");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+    const navigate = useNavigate();
 
     const logout = () => {
         localStorage.removeItem("token");
+        navigate("/")
         window.location.reload();
     };
 
@@ -47,28 +50,28 @@ export default function NavBar() {
                 <div className="w-1/3 flex justify-center md:justify-start">
                     <Link to="/" className="text-2xl font-semibold hover:font-bold hover:underline font-serif">Blog Page</Link>
                 </div>
-                <div className="w-1/3 hidden md:flex gap-4 justify-end">
+                <div className=" hidden md:flex gap-4 justify-end ">
                     {token ? (
                         <>
                             <Link to="/myjourney" className="text-lg font-semibold hover:underline transition-all">My journey</Link>
                             {user?.role === "ADMIN" ? (
                                 <div className="flex gap-2 items-center">
                                     <p className="text-xs font-bold">ADMIN</p>
-                                    <Link to="/newclient" className="text-lg font-semibold hover:underline transition-all">New Client</Link>
+                                    
                                 </div>
                             ): (user?.role === "TRAINER" && 
                                 <div className="flex gap-2 items-center">
                                     <p className="text-xs font-bold">TRAINER</p>
-                                    <Link to="/myclients" className="text-lg font-semibold hover:underline transition-all">My Clients</Link>    
+                                    <Link to="/myclients" className="text-lg text-nowrap font-semibold hover:underline transition-all">My Clients</Link>    
                                 </div>
                             )}
-                            
+                            <Link to="/newclient" className="text-lg text-nowrap font-semibold hover:underline transition-all">Create guide</Link>
                             <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
                         </>
                     ) : (
                         <>
-                            <Link to="/signup" className="text-lg font-semibold hover:underline transition-all">Sign Up</Link>
-                            <Link to="/login" className="text-lg font-semibold hover:underline transition-all">Login</Link>
+                            <Link to="/signup" className="text-lg text-nowrap font-semibold hover:underline transition-all">Sign Up</Link>
+                            <Link to="/login" className="text-lg text-nowrap font-semibold hover:underline transition-all">Login</Link>
                         </>
                     )}
                 </div>
@@ -82,15 +85,16 @@ export default function NavBar() {
                                 <div>
                                     <p className="text-xs font-bold">ADMIN</p>
                                     
-                                    <Link to={`/profile/${user?.id}`} className="text-lg font-semibold hover:underline transition-all">Profile</Link>
+                                        <Link to={`/profile/${user?.id}`} className="text-lg text-nowrap font-semibold hover:underline transition-all">Profile</Link>
                                 </div>
                             ) : (user?.role === "TRAINER" && 
                                 <div className="flex gap-2 items-center">
                                     <p className="text-xs font-bold">TRAINER</p>
-                                    <Link to="/myclients" className="text-lg font-semibold hover:underline transition-all">My Clients</Link>
+                                    <Link to="/myclients" className="text-lg text-nowrap font-semibold hover:underline transition-all">My Clients</Link>
                                 </div>
                             )}
-                                <Link to="/myjourney" className="text-lg font-semibold hover:underline transition-all">My journey</Link>    
+                                <Link to="/newclient" className="text-lg text-nowrap font-semibold hover:underline transition-all">Create guide</Link>
+                                <Link to="/myjourney" className="text-lg text-nowrap font-semibold hover:underline transition-all">My journey</Link>    
                             </div>
                             <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
                         </>

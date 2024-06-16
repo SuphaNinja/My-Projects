@@ -6,6 +6,12 @@ module.exports = {
   theme: {
 
     extend: {
+      writingMode: {
+        'vertical-rl': 'vertical-rl',
+      },
+      textOrientation: {
+        'mixed': 'mixed',
+      },
       colors: {
         default: "#F6F4E8",
         primary: "#BACEC1",
@@ -65,6 +71,12 @@ module.exports = {
         },
         '.scroll-margin-top': {
           scrollMarginTop: '5px', /* Adjust as needed */
+        },
+        '.writing-mode-vertical-rl': {
+          writingMode: 'vertical-rl',
+        },
+        '.text-orientation-mixed': {
+          textOrientation: 'mixed',
         },
       });
     },

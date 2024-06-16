@@ -1,8 +1,8 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axiosInstance from "../lib/axiosInstance";
 import { useEffect, useState } from "react";
 import axios from "axios"
-
+import SubmitButton from "../components/ui/SubmitButton";
 
 
 
@@ -16,7 +16,8 @@ export default function NewClient() {
         goalDuration: "",
         description: "",
         currentlyTraining: "",
-        maxTraining: ""
+        maxTraining: "",
+        trainerId: ""
     });
 
     const infoString = `
@@ -25,12 +26,12 @@ export default function NewClient() {
     Maximum days a week to train: ${formData.maxTraining}, Description of the goal im trying to achieve: ${formData.description}`;
 
     const generateAiAnswer = useMutation({
-        mutationFn: (infoString) => axiosInstance.post("/test", { prompt: infoString })
+        mutationFn: (infoString) => axiosInstance.post("/test", { prompt: infoString, trainerId: formData.trainerId })
     });
 
-
-    const createGuide = useMutation({
-        mutationFn: () => axiosInstance.post("/create-new-guide", JSON.parse(generateAiAnswer.data.data.success[0].message.content))
+    const trainers = useQuery({
+        queryKey: ["trainers"],
+        queryFn: () => axiosInstance.get("/get-all-trainers")
     });
 
     const handleChange = (e) => {
@@ -47,30 +48,21 @@ export default function NewClient() {
         generateAiAnswer.mutate(infoString); 
     };
 
-   /*  useEffect(() => {
-        if (generateAiAnswer.isSuccess && generateAiAnswer?.data?.data?.success[0]?.message?.content) {
-            try {
-                const parsedData = JSON.parse(generateAiAnswer.data.data.success[0].message.content);
-                console.log('Parsed Data:', parsedData); // Debugging: Log parsed data to check format
-                createGuide.mutate(parsedData);
-            } catch (error) {
-                console.error('Error parsing AI response JSON:', error);
-            }
-        }
-    }, [generateAiAnswer.isSuccess]); */
-    
-    
-
     return (
         <div className="flex items-center md:mx-60 jusitfy-center">
             <div className="bg-slate-500 flex md:mt-0 mt-16 flex-col w-full h-full">
-                <button onClick={createGuide.mutate}>testcreate</button>
-                <button onClick={() => console.log(infoString)}>console.log formadata</button>
-                <button onClick={() => console.log(JSON.parse(generateAiAnswer.data.data.success[0].message.content))}>parse</button>
-                <button onClick={() => console.log(generateAiAnswer)}>consolelog whole response</button>
-                <button onClick={() => console.log(generateAiAnswer.data.data.success[0].message.content)}>console log message.content</button>
+                
+
+               
                 <form onSubmit={handleSubmit} className="text-white p-6 grid grid-cols-4 gap-2">
                     <h1 className="text-center col-span-4 md:text-2xl fontsemibold text-xl">Reach Your goals!</h1>
+                    {generateAiAnswer.isError && <p className="text-red-700 col-span-4 font-bold text-center text-xl">Something went wrong, please try again later!</p>}
+                    {generateAiAnswer?.data?.data?.success && <p className="text-green-600 col-span-4 font-bold text-center text-xl">{generateAiAnswer?.data?.data?.success}</p>}
+                    {generateAiAnswer?.data?.data?.error && <p className="text-red-700 col-span-4 font-bold text-center text-xl">{generateAiAnswer?.data?.data?.error}</p>}
+                    {generateAiAnswer.isSuccess && !generateAiAnswer?.data?.data?.error ? (
+                        <div></div>
+                    ) : 
+                    <>
                     <div className="col-span-2">
                         <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Currently training</label>
                         <select
@@ -175,6 +167,27 @@ export default function NewClient() {
                             ))}
                         </select>
                     </div>
+                    {trainers.isSuccess && 
+                        <div className="col-span-2">
+                            <label htmlFor="trainer" className="block text-sm font-medium text-white mb-2">
+                                Choose a Trainer
+                            </label>
+                            <select
+                                name="trainerId"
+                                value={formData.trainerId}
+                                onChange={handleChange}
+                                className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
+                                required
+                            >
+                                <option value="">Choose your trainer</option>
+                                {Object.values(trainers.data.data.success).map((trainer) => (
+                                    <option key={trainer.id} value={trainer.id}>
+                                        {trainer.firstName} {trainer.lastName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        }
                     <div className="col-span-4 ">
                         <label htmlFor="description" className="block text-white">Description</label>
                         <textarea
@@ -186,12 +199,18 @@ export default function NewClient() {
                             className="w-full h-24 p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white resize-none"
                             rows="4"
                         ></textarea>
-                    </div>
-                    <button  type="submit" className="col-span-4 w-full md:w-1/2 py-2 rounded-lg mx-auto bg-slate-700 hover:bg-slate-800 hover:underline font-semibold transition-all">Start your journey!</button>
-                </form>
+                    </div></>
+                    }
+                    <SubmitButton apiInfo={generateAiAnswer} />
+                    
+                </form> 
+            
             </div>
         </div>
     );
-}
+};
+
+
+
 
 

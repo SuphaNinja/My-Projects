@@ -26,8 +26,7 @@ export default function Guide(guide) {
     } else {
         return (
             <div className="flex flex-col h-full">
-                <button onClick={() => console.log(guide)}>console the guide </button>
-                <div className="ml-auto mr-2">
+                <div className="ml-auto mt-4 mr-2">
                     <select className="bg-slate-500 text-black rounded-md" onChange={handleDayChange}>
                         <option value="0">-- Select a Day --</option>
                         {days.map((day, index) => (

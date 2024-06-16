@@ -27,12 +27,29 @@ model User {
   trainer       User?    @relation("TrainerClients", fields: [trainerId], references: [id])
   clients       User[]   @relation("TrainerClients")
   guides        Guide[]
+  
+  sentMessages    Message[]  @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+}
+
+model Message {
+  id            String   @id @default(cuid())
+  content       String
+  createdAt     DateTime @default(now())
+  read          Boolean  @default(false)
+  
+  senderId      String
+  sender        User     @relation("SentMessages", fields: [senderId], references: [id])
+  
+  recipientId   String
+  recipient     User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
 }
 
 model Guide {
   id              Int      @id @default(autoincrement())
   tipsToReachGoal String
   days            Day[]
+  trainerId       String?
   clientId        String
   client          User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }

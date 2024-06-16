@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation } from '@tanstack/react-query';
 import axiosInstance from '../lib/axiosInstance';
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 
 export default function SignUp() {
@@ -18,7 +19,12 @@ export default function SignUp() {
 
     const signUp = useMutation({
         mutationFn: (formData) => axiosInstance.post("/create-new-user", formData),
-        onSuccess: () => navigate
+        onSuccess: () => {
+            toast("Sign up successfull! Redirecting to Login page.");
+            setTimeout(() => {
+                navigate("/pages/login")
+                window.location.reload();
+            }, 1000)}
     });
 
     const handleChange = (e) => {

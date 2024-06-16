@@ -7,8 +7,8 @@ export default function Exercise(exercises) {
 
     if (exercises) {
         return (
-            <div className="mt-6">
-                <div className="w-full ">
+            <div className="md:mt-6">
+                <div className="w-full overflow-y-auto ">
                     {exercises?.exercises?.length < 1 ? (
                         <div>
                             <p className="text-center text-xl font-semibold">Get some rest, today is a restday!</p>

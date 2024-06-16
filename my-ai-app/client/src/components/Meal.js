@@ -12,7 +12,6 @@ export default function Meal(meal) {
 
     return (
         <div className="mt-6">
-            <button onClick={() => console.log(meal)}>console meal</button>
             <div className="w-full ">
                 {meal?.meal?.length < 1 ? (
                     <div>
@@ -21,12 +20,16 @@ export default function Meal(meal) {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-5">
                     {meal?.meal?.map((meal, index) => (
-                            <div key={index} className="col-span-1 border-x-2 border-slate-200">
-                                <p className="text-center border-b-2 pb-1 font-semibold" >{meal.mealType}</p>
+                            <div key={index} className="col-span-1 overflow-y-scroll no-scrollbar border-x-2 border-slate-200">
+                                <p className="text-center border-b-2 pb-1 font-semibold first-letter:uppercase" >{meal.mealType}</p>
                                 <div className="flex flex-col gap-2 px-2 pt-2">
-                                    <p className="text-sm">Amount: <span>{meal.time}</span></p>
-                                    <p className="text-sm">Calories burned <span>{meal.burnedCalories}</span></p>
-                                    <p></p>
+                                    {meal.ingredients.map((ingredient, index) => (
+                                        <div className="flex  pb-1 flex-col text-xs gap-2" key={index}>
+                                            <p>1. <span>{ingredient.name}</span></p>
+                                            <p>Amount: <span>{ingredient.grams}</span></p>
+                                            <p>Calories. <span>{ingredient.calories}</span></p>
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         ))}

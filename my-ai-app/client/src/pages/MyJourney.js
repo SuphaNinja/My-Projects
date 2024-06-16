@@ -4,6 +4,7 @@ import { useState } from "react";
 import Guide from "../components/Guide";
 import Overview from "../components/Overview";
 import Profile from "../components/Profile";
+import Chat from "../components/Chat";
 
 
 export default function MyJourney () {
@@ -20,10 +21,10 @@ export default function MyJourney () {
         switch (activeComponent) {
             case 'guide':
                 return <Guide guide={user?.guides[0]} />;
-            case 'profile':
-                return <Profile user={user}/>;
             case 'overview':
-                return <Overview />;
+                return <Overview user={user} setActiveComponent={setActiveComponent}/>;
+            case 'chat':
+                return <Chat user={user}/>;
 
             default:
                 return null;
@@ -34,12 +35,14 @@ export default function MyJourney () {
 
     if (currentUser.isSuccess) {
         return ( 
-            <div>
-                <button onClick={() => console.log(user)}>console.log user</button>
+            <div className="md:pt-4 pt-6 ">
                 <div className="md:mx-24 h-full text-white flex flex-col">
-                    <div className="bg-gradient-to-b  from-slate-800 to-slate-600 md:rounded-md md:overflow-hidden flex flex-col w-full h-[88vh]">
+                    <div className="bg-gradient-to-b  from-slate-800 to-slate-600 md:rounded-md md:overflow-hidden flex flex-col w-full min-h-screen md:min-h-[88vh] md:h-[88vh]">
                         <div className="bg-gradient-to-b  from-slate-800 to-slate-600 flex md:px-12 items-center justify-between w-full h-1/6">
-                            <p className="text-2xl text-center mx-auto">{user.userName}'s <span>training guide!</span></p>
+                            <p className="text-2xl text-center py-4 m mt-12 md:mt-0 mx-auto">
+                                <span className="text-white md:text-4xl font-extrabold">{user.userName}'s</span>{' '}
+                                <span className="text-green-400 md:text-4xl font-extrabold">training guide!</span>
+                            </p>
                         </div>
                         <div className="flex border-b-2 px-12 pb-2 justify-between">
                             <button
@@ -50,15 +53,15 @@ export default function MyJourney () {
                             <button
                                 onClick={() => setActiveComponent('overview')}
                                 className={`md:text-xl transition-all hover:font-semibold hover:underline ${activeComponent === 'overview' ? " text-white font-semibold underline" : "text-slate-300"}`}>
-                                overview
+                                Overview
                             </button>
                             <button
-                                onClick={() => setActiveComponent('profile')}
+                                onClick={() => setActiveComponent('chat')}
                                 className={`md:text-xl transition-all hover:font-semibold hover:underline ${activeComponent === 'profile' ? " text-white font-semibold underline" : "text-slate-300"}`}>
-                                Profile
+                                Chat
                             </button>
                         </div>
-                        <div className="mt-2 p-4 h-auto">
+                        <div className="">
                             {user.guides.length > 0 ? (
                                 renderComponent()
                             ) : (

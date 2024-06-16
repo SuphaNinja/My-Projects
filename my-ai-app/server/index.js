@@ -42,16 +42,7 @@ const verifyToken = (req, res, next) => {
     });
 };
 
-
-app.post("/test", verifyToken, async (req, res) => {
-  const  { prompt }  = req.body;
-  console.log("prompt: ", prompt)
-  if (!prompt) {
-    return res.status(400).json({ error: "Prompt is required" });
-  }
-
-
-  const guideLines = `
+const guideLines = `
 You just got some information about a user. Only provide exercises for as many days as: (Maximum days a week to train). Only make workoutSchedule for the maximum days provided. example: Maximum days 3-5 make 5 days of training and 2 days of restdays. Still provide the mealplan.
 
 Please provide a comprehensive 7-day  guide that includes a workout schedule and a  meal schedule. The meal plan should include breakfast, lunch, dinner, and two snacks each day. Ensure the meal plan is specifically adapted to my goals. 
@@ -956,8 +947,8 @@ This is a correct output example note: there should only be one object on each e
   "TipsToReachGoal": "To successfully gain weight and muscle, it's essential to focus on both nutrition and exercise. First, ensure you are consuming a sufficient amount of calories and macronutrients to fuel muscle growth. Increase your protein intake to support muscle repair and development, aiming for at least 1.2 to 1.7 grams of protein per kilogram of body weight. Include complex carbohydrates and healthy fats to provide energy for workouts and overall daily activities. It's crucial to eat consistently throughout the day, including pre- and post-workout meals to support recovery and optimize muscle growth. Stay hydrated and consider adding protein shakes or smoothies as convenient snacks or meal replacements. In terms of exercise, focus on compound movements targeting major muscle groups to build strength and size. For example, incorporate exercises like squats, deadlifts, bench press, and pull-ups. Prioritize progressive overload and ensure adequate recovery. Aim to train 3-5 days a week, providing sufficient rest days for muscle recovery. Adequate sleep is also crucial for optimal recovery and muscle growth. Consistency and patience are key, and with dedication, you can expect to see noticeable progress towards your weight and muscle gain goals within 6-12 months."
 }
 `;
-    
-  const dayOutput = `
+
+const dayOutput = `
   "day1": {
       "mealPlan": {
         "breakfast": {
@@ -1059,28 +1050,49 @@ This is a correct output example note: there should only be one object on each e
       ]
     },`
 
+
+app.post("/test", verifyToken, async (req, res) => {
+  const  { prompt, trainerId }  = req.body;
+  console.log("prompt: ", prompt)
+  console.log("trainerId: ", trainerId)
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt is required" });
+  }
     const userId = req.userId;
 
     try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo-1106",
-            response_format:{"type": "json_object"},
-            messages: [
-                { "role": "system", "content": "You are a helpful assistant designed to output valid JSON. Here are all the guidelines you should refer to when answering: " + guideLines + "this is exactly how a day should be structured :" + dayOutput},
-                { "role": "user", "content": prompt },
-            ], 
-            max_tokens: 4096,
-        });
+      const response = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo-1106",
+          response_format:{"type": "json_object"},
+          messages: [
+              { "role": "system", "content": "You are a helpful assistant designed to output valid JSON. Here are all the guidelines you should refer to when answering: " + guideLines + "this is exactly how a day should be structured :" + dayOutput},
+              { "role": "user", "content": prompt },
+          ], 
+          max_tokens: 4096,
+      });
 
-        console.log(" Respone from chatgpt:", response.choices[0].message)
+      console.log(" Respone from chatgpt:", response.choices[0])
 
-        if (response) {
-            res.send({ success: response.choices })
-        }
+      if (!response) {
+        res.send({ error: "Something went wrong with creating the guide!"})
+        return;
+      };
 
+      const trainer = await prisma.user.findUnique({
+        where: { id: trainerId }
+      });
 
-      const user = await prisma.user.findUnique({
-        where: { id: userId }
+      const user = await prisma.user.update({
+        where: { id: userId },
+        include: { guides: true },
+        data: {
+          trainer: {
+            connect: {
+              id: trainer ? trainer.id : "clxburs9z0000682170e7iwxo",
+            },
+          },
+        },
       });
 
       if (!user) {
@@ -1088,12 +1100,93 @@ This is a correct output example note: there should only be one object on each e
         return;
       };
 
-    
+      if (user.guides.length > 0) {
+        res.send({ error: "User already has a guide, delete it to create a new one!" });
+        return;
+      };
+
+      const guideData = JSON.parse(response.choices[0].message.content)
+
+      if (!guideData) {
+        res.send({ error: "No data provided, cannot create guide at this moment!" });
+        return;
+      };
+
+      const createdGuide = await prisma.guide.create({
+        data: {
+          tipsToReachGoal: guideData.TipsToReachGoal,
+          trainerId: trainerId,
+          client: {
+            connect: { id: user.id }
+          }
+        },
+      });
+
+      for (const [dayName, { mealPlan, workoutExercises }] of Object.entries(guideData.guide)) {
+        const dayNumber = parseInt(dayName.replace("day", ""));
+        const createdDay = await prisma.day.create({
+          data: {
+            dayNumber: dayNumber,
+            guide: { connect: { id: createdGuide.id } }
+          }
+        });
+
+
+        if (mealPlan) {
+          for (const [mealType, mealPlanItem] of Object.entries(mealPlan)) {
+
+            const createdMealplan = await prisma.mealPlan.create({
+              data: {
+                mealType: mealType,
+                day: { connect: { id: createdDay.id } },
+
+              }
+            });
+
+            const ingredientsData = mealPlanItem.ingredients ?
+              mealPlanItem.ingredients.map(ingredient => ({
+                name: ingredient.name,
+                grams: ingredient.grams,
+                calories: ingredient.calories,
+                mealPlanId: createdMealplan.id
+              })) :
+              [];
+
+            const ingredients = await prisma.ingredient.createMany({
+              data: ingredientsData
+            });
+          }
+        }
+
+        if (Array.isArray(workoutExercises) || workoutExercises.restDay !== true || workoutExercises) {
+
+          if (workoutExercises.length > 0) {
+            for (const exercise of workoutExercises) {
+              if (exercise.exerciseName) {
+                await prisma.workoutExercise.create({
+                  data: {
+                    exerciseName: exercise.exerciseName,
+                    time: exercise.time,
+                    burnedCalories: exercise.burnedCalories,
+                    day: { connect: { id: createdDay.id } }
+                  }
+                });
+              }
+            }
+          }
+        }
+      }
+
+      res.send({ success: "Guide has been created successfully!" });
+
 
     } catch (error) {
       console.error("Error with OpenAI API:", error);
       res.status(500).json({ error: "Internal Server Error" });
-    }
+      return;
+    } 
+
+    
 });
 
 //---------------------------------------CREATE NEW USER---------------------------------------------------------
@@ -1159,101 +1252,6 @@ app.post("/create-new-user", async (req, res) => {
     }
 });
 
-
-app.post("/create-new-guide", verifyToken, async (req, res) => {
-
-  const userId = req.userId;
-
-  const guideData = req.body;
-  console.log("guideData",guideData)
-
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      res.send({ error: "User could not be found!" });
-      return;
-    };
-
-
-    if (!guideData) {
-      res.send({ error: "No data provided, cannot create guide at this moment!" });
-      return;
-    };
-
-    const createdGuide = await prisma.guide.create({
-      data: {
-        tipsToReachGoal: guideData.TipsToReachGoal,
-        client: {
-          connect: { id: user.id }
-        }
-      },
-    });
-
-    for (const [dayName, { mealPlan, workoutExercises }] of Object.entries(guideData.guide)) {
-      const dayNumber = parseInt(dayName.replace("day", ""));
-      const createdDay = await prisma.day.create({
-        data: {
-          dayNumber: dayNumber,
-          guide: { connect: { id: createdGuide.id } }
-        }
-      });
-
-
-      if (mealPlan) {
-        for (const [mealType, mealPlanItem] of Object.entries(mealPlan)) {
-
-          const createdMealPlan = await prisma.mealPlan.create({
-            data: {
-              mealType: mealType,
-              day: { connect: { id: createdDay.id } },
-
-            }
-          });
-          const ingredientsData = mealPlanItem.ingredients ?
-              mealPlanItem.ingredients.map(ingredient => ({
-                name: ingredient.name,
-                grams: ingredient.grams,
-                calories: ingredient.calories,
-                mealPlanId: createdMealPlan.id 
-            })) :
-            [];
-          const ingredients = await prisma.ingredient.createMany({
-            data: ingredientsData,
-          });
-        }
-      }
-
-      if (Array.isArray(workoutExercises) && workoutExercises !== "restday") {
-        
-        if (workoutExercises.length > 0) {
-          for (const exercise of workoutExercises) {
-            if (exercise.exerciseName) {
-              await prisma.workoutExercise.create({
-                data: {
-                  exerciseName: exercise.exerciseName ,
-                  time: exercise.time,
-                  burnedCalories: exercise.burnedCalories,
-                  day: { connect: { id: createdDay.id } }
-                }
-              });
-            }
-          }
-        }
-      }
-    }
-
-  } catch (error){
-    console.log("error creating new guide:", error);
-    return;
-  }
-
-
-  
-});
-
 //--------------------------------------LOGIN---------------------------------------------------------
 
 app.post("/login", async (req, res) => {
@@ -1302,8 +1300,66 @@ app.get("/get-current-user", verifyToken, async (req, res) => {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         include: {
-          trainer: true,
+          trainer: {
+            include: {clients:true}
+          },
           clients: true, 
+          sentMessages: { 
+            orderBy: { createdAt: "desc"},
+            include: { 
+              sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                userName: true,
+                email: true,
+                role: true,
+                profileImage: true,
+                trainerId: true
+              }
+            }, recipient: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  userName: true,
+                  email: true,
+                  role: true,
+                  profileImage: true,
+                  trainerId: true
+                }
+              } 
+            }
+          }, 
+          receivedMessages: {
+            orderBy: { createdAt: "desc" },
+            include: { 
+              recipient: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  userName: true,
+                  email: true,
+                  role: true,
+                  profileImage: true,
+                  trainerId: true
+                }
+            }, sender: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  userName: true,
+                  email: true,
+                  role: true,
+                  profileImage: true,
+                  trainerId: true
+                }
+              } 
+            }
+          },
           guides: {
             include: {
               days: {
@@ -1331,106 +1387,234 @@ app.get("/get-current-user", verifyToken, async (req, res) => {
     }
 });
 
-app.post("/create-new-guide", verifyToken, async (req,res) => {
-    const userId = req.userId;
 
-    console.log("userId:",userId)
-
-    const guideData = req.body;
-  
+app.post("/update-message", verifyToken, async (req,res) => {
+  const userId = req.userId;
+  const messageId = req.body;
+  console.log("messageID : " , messageId )
 
 
-    try {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {id: userId}
+    });
 
-        const user = await prisma.user.findUnique({
-            where: {id: userId}
-        });
+    if (!user) {
+      res.send({error: "User could not be found!"});
+      return;
+    };
 
-        if (!user) {
-            res.send({error: "User could not be found!"});
-            return;
-        };
+    const messageToUpdate = await prisma.message.update({
+      where: {id: messageId.messageId},
+      data: {
+        read: true 
+      }
+    });
 
-        if (!guideData) {
-            res.send({error: "No data provided, cannot create guide at this moment!"});
-            return;
-        };
+  } catch (error) {
+    console.log("Error updating message", error );
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+});
 
-        const createdGuide = await prisma.guide.create({
-            data: {
-                tipsToReachGoal: guideData.TipsToReachGoal,
-                client: {
-                    connect: {id: user.id}
-                }
-            }, 
-        });
+// --------------------------- SEND MESSAGE ----------------------------------
 
-        for (const [dayName, { mealPlan, workoutExercises }] of Object.entries(guideData.guide)) {   
-            const dayNumber = parseInt(dayName.replace("day", ""));
-            const createdDay = await prisma.day.create({
-                data: {
-                    dayNumber: dayNumber, 
-                    guide: { connect: { id: createdGuide.id } } 
-                }
-            });
-
-            
-            if (mealPlan) {
-                for (const [mealType, mealPlanItem] of Object.entries(mealPlan)) {
-                    
-                    const ingredientsData = mealPlanItem.ingredients ?
-                        mealPlanItem.ingredients.map(ingredient => ({
-                            name: ingredient.name,
-                            grams: ingredient.grams,
-                            calories: ingredient.calories
-                        })) :
-                        [];
-
-                    const ingredients = await prisma.ingredient.createMany({
-                        data: ingredientsData
-                    });
-
- 
-                    await prisma.mealPlan.create({
-                        data: {
-                            mealType: mealType,
-                            day: { connect: { id: createdDay.id } },
-
-                        }
-                    });
-                }
-            }
-
-            if (Array.isArray(workoutExercises) || workoutExercises.restDay !== true || workoutExercises) {
-                
-                if(workoutExercises.length > 0) {
-                    for (const exercise of workoutExercises) {
-                        console.log(exercise.exerciseName ? exercise.exerciseName : exercise)
-                        if (exercise.exerciseName) {
-                           await prisma.workoutExercise.create({
-                               data: {
-                                   exerciseName: exercise.exerciseName,
-                                   time: exercise.time,
-                                   burnedCalories: exercise.burnedCalories,
-                                   day: { connect: { id: createdDay.id } }
-                               }
-                           });
-                       }
-                    }
-                }
-            }   
-        }
+app.post("/send-message", verifyToken, async (req,res ) => {
+  const userId = req.userId;
+  const  data  = req.body;
+  console.log("send message trainer id : ", data.recieverId)
+  console.log("send message content: ", data.message)
 
 
+  try { 
+    if (!data.message){
+      res.send({error: "You need to enter a message first!"});
+      return;
+    };
+    if (data.message.length < 20) {
+      res.send({ error: "Message must be atleast 20 characters long!"});
+      return;
+    };
 
+    const sender = await prisma.user.findUnique({
+      where: {id: userId}
+    });
+    
+    if (!sender) {
+      res.send({error: "Could not send message, user not found!"});
+      return;
+    };
 
+    const reciever = await prisma.user.findUnique({
+      where: { id: data.recieverId }
+    });
 
+    if (!reciever) {
+      res.send({error: "Could not send message, reciever not found!"});
+      return;
+    };
 
-    } catch (error) {
-        console.log("Error creating new guide:",error);
-        res.send({error: "Something went wrong creating a new guide, try again later!"});
-        return;
+    if (!data.message) {
+      res.send({ error: "No message entered!" });
+      return;
+    };
+    
+    const message = await prisma.message.create({
+      data: {
+        content: data.message,
+        senderId: userId,
+        recipientId: reciever.id,
+      },
+    });
+
+    if (!message) {
+      res.send({error: "Error sending message, please try again later!"});
+      return;
+    };
+
+    if (!sender.role !== "TRAINER" || !sender.role !== "ADMIN") {
+      const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { "role": "system", "content": "You are a helpful assistant designed to help users with questions about fitness, health and workouts. Make it give a short answer with a maximum of 50 words!" },
+          { "role": "user", "content": data.message },
+        ],
+        max_tokens: 4096,
+      });
+      console.log(response.choices[0].message)
+      
+      const messageFromAi = await prisma.message.create({
+        data: {
+          content: response.choices[0].message.content,
+          senderId: reciever.id,
+          recipientId: userId,
+        },
+      });
     }
+
+    res.send({success: "Message recieved successfully by ai!"});
+
+  } catch (error) {
+    console.log("Error sending message : ", error);
+    res.send({error: "Something went wrong, try again later!"});
+    return;
+  }
+
+});
+
+// ---------------------- GET MESSAGES  --------------------------------
+
+
+app.get("/get-messages", verifyToken, async (req,res) => {
+  const userId = req.userId;
+
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id:userId },
+    });
+    
+    if (!user) {
+      res.send({error: "User could not be found!"});
+      return;
+    };
+
+    const sentMessages = await prisma.message.findMany({
+      where:{ senderId: user.id },
+      orderBy: [
+        { read: 'asc' }, 
+        { createdAt: 'desc' }
+      ], 
+      include: {recipient:true, sender:true}
+    });
+
+    const recievedMessages = await prisma.message.findMany({
+      where: { recipientId: user.id },
+      orderBy: [
+        { read: 'asc' },
+        { createdAt: 'desc' }
+      ],
+      include: { recipient: true, sender: true }
+    });
+
+    res.send({ messages: { sentMessages, recievedMessages }});
+
+  } catch (error) {
+    console.log("Error getting messages: ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+});
+
+// ---------------------- GET ALL TRAINERS --------------------------------
+
+app.get("/get-all-trainers", async (req, res) => {
+  try {
+
+    const trainers = await prisma.user.findMany({
+      where: {role: "TRAINER"},
+      include: { clients:true }
+    });
+
+    if(!trainers) {
+      res.send({error: "Cannot find any trainers at this time."});
+      return;
+    };
+
+    const { password, ...trainersWithoutPass } = trainers;
+    res.send({ success: trainersWithoutPass });
+  } catch (error) {
+    console .log("Error getting trainers: ", error);
+    return;
+  }
+});
+
+
+// ----------------------- EDIT USER PROFILE -------------------------------
+
+app.post("/edit-profile", verifyToken, async (req, res) => {
+
+  const userId = req.userId;
+
+  const updateData = req.body;
+  console.log(updateData)
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: updateData.email }
+    });
+
+    if (!user) {
+      res.send({ error: "User not found!" });
+      return;
+    };
+
+
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: updateData.firstName || undefined,
+        lastName: updateData.lastName || undefined,
+        userName: updateData.userName || undefined,
+        profilemage: updateData.profilemage || undefined,
+
+      }
+    });
+
+
+
+
+
+
+
+
+  } catch (error) {
+    console.log("Error updating profile :", error);
+    res.send({ error: "Something went wrong, try again later!" })
+    return;
+  }
 });
 
 app.listen(port, () => {
