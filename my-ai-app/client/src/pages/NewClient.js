@@ -49,11 +49,8 @@ export default function NewClient() {
     };
 
     return (
-        <div className="flex items-center md:mx-60 jusitfy-center">
-            <div className="bg-slate-500 flex md:mt-0 mt-16 flex-col w-full h-full">
-                
-
-               
+        <div className="flex items-center pb-32 md:mt-16 md:mx-60 jusitfy-center">
+            <div className="bg-slate-500  md:rounded-md flex md:mt-0 mt-16 flex-col w-full h-full">
                 <form onSubmit={handleSubmit} className="text-white p-6 grid grid-cols-4 gap-2">
                     <h1 className="text-center col-span-4 md:text-2xl fontsemibold text-xl">Reach Your goals!</h1>
                     {generateAiAnswer.isError && <p className="text-red-700 col-span-4 font-bold text-center text-xl">Something went wrong, please try again later!</p>}
@@ -63,7 +60,7 @@ export default function NewClient() {
                         <div></div>
                     ) : 
                     <>
-                    <div className="col-span-2">
+                    <div className="col-span-4 md:col-span-2">
                         <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Currently training</label>
                         <select
                             name="currentlyTraining"
@@ -71,6 +68,7 @@ export default function NewClient() {
                             onChange={handleChange}
                             className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
+                            disabled={generateAiAnswer.isPending}
                         >
                             <option value="">Select Frequency</option>
                             <option value="0_days_a_week">0 days a week</option>
@@ -79,7 +77,7 @@ export default function NewClient() {
                             <option value="more_than_5_days_a_week">More than 5 days a week</option>
                         </select>
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-4 md:col-span-2">
                         <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Maximum training days per week</label>
                         <select
                             name="maxTraining"
@@ -87,6 +85,7 @@ export default function NewClient() {
                             onChange={handleChange}
                             className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
+                            disabled={generateAiAnswer.isPending}
                         >
                             <option value="">Select Frequency</option>
                             <option value="1-3_days_a_week">1-3 days a week</option>
@@ -94,7 +93,7 @@ export default function NewClient() {
                             <option value="more_than_5_days_a_week">More than 5 days a week</option>
                         </select>
                     </div>
-                    <div className="col-span-1 ">
+                    <div className="col-span-2 md:col-span-1 ">
                         <label htmlFor="age" className="block text-sm font-medium text-white mb-2">Age</label>
                         <input
                             name="age"
@@ -105,9 +104,10 @@ export default function NewClient() {
                             max="80"
                             className="md:w-1/2 p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
+                            disabled={generateAiAnswer.isPending}
                         />
                     </div>
-                    <div className="col-span-1">
+                    <div className="col-span-2 md:col-span-1">
                         <label htmlFor="gender" className="block text-sm font-medium text-white mb-2">Gender</label>
                         <select
                             name="gender"
@@ -115,18 +115,20 @@ export default function NewClient() {
                             onChange={handleChange}
                             className="md:w-2/3 bg-slate-800 p-2 border-2 border-gray-300 rounded-lg"
                             required
+                            disabled={generateAiAnswer.isPending}
                         >
                             <option value="male">Male</option>
                             <option value="female">Female</option>
                         </select>
                     </div>
-                    <div className="col-span-2 ">
+                    <div className="col-span-4 md:col-span-2">
                         <label htmlFor="goal" className="block text-white">Goal Duration</label>
                         <select
                             name="goalDuration"
                             value={formData.goalDuration}
                             onChange={handleChange}
                             required
+                            disabled={generateAiAnswer.isPending}
                             className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                         >
                             <option value="">Select Duration</option>
@@ -137,7 +139,7 @@ export default function NewClient() {
                             <option value="more_than_a_year">More than a year</option>
                         </select>
                     </div>
-                    <div className="col-span-2">
+                            <div className="col-span-4 md:col-span-2">
                         <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Current Weight</label>
                         <select
                             name="currentWeight"
@@ -145,6 +147,7 @@ export default function NewClient() {
                             onChange={handleChange}
                             className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
+                            disabled={generateAiAnswer.isPending}
                         >
                             <option value="" disabled>Select your weight</option>
                             {Array.from({ length: 66 }, (_, i) => i + 45).map((weight) => (
@@ -152,7 +155,7 @@ export default function NewClient() {
                             ))}
                         </select>
                     </div>
-                    <div className="col-span-2">
+                    <div className="col-span-4 md:col-span-2">
                         <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Weight goal</label>
                         <select
                             name="weightGoal"
@@ -160,6 +163,7 @@ export default function NewClient() {
                             onChange={handleChange}
                             className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
+                            disabled={generateAiAnswer.isPending}
                         >
                             <option value="" disabled>Select your desired weight</option>
                             {Array.from({ length: 66 }, (_, i) => i + 45).map((weight) => (
@@ -168,21 +172,22 @@ export default function NewClient() {
                         </select>
                     </div>
                     {trainers.isSuccess && 
-                        <div className="col-span-2">
-                            <label htmlFor="trainer" className="block text-sm font-medium text-white mb-2">
+                        <div className="col-span-4 md:col-span-2">
+                            <label htmlFor="trainer" className="block text-sm font-medium  text-white mb-2">
                                 Choose a Trainer
                             </label>
                             <select
                                 name="trainerId"
                                 value={formData.trainerId}
                                 onChange={handleChange}
-                                className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
+                                className="w-full flex p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                                 required
+                                disabled={generateAiAnswer.isPending}
                             >
                                 <option value="">Choose your trainer</option>
                                 {Object.values(trainers.data.data.success).map((trainer) => (
-                                    <option key={trainer.id} value={trainer.id}>
-                                        {trainer.firstName} {trainer.lastName}
+                                    <option key={trainer.id} value={trainer.id }>
+                                        <p className="">{trainer.firstName} {trainer.lastName}<span> <p className="ml-auto">{trainer.clients.length} <span>Active clients</span></p></span></p>
                                     </option>
                                 ))}
                             </select>
@@ -196,6 +201,7 @@ export default function NewClient() {
                             value={formData.description}
                             onChange={handleChange}
                             required
+                            disabled={generateAiAnswer.isPending}
                             className="w-full h-24 p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white resize-none"
                             rows="4"
                         ></textarea>
@@ -203,8 +209,7 @@ export default function NewClient() {
                     }
                     <SubmitButton apiInfo={generateAiAnswer} />
                     
-                </form> 
-            
+                </form>
             </div>
         </div>
     );

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import Day from "./Day";
-import { useMutation, useQueryClient} from "@tanstack/react-query"
-import axiosInstance from "../lib/axiosInstance";
+import ClientDay from "./ClientDay";
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import axiosInstance from "../../lib/axiosInstance";
 import { toast } from "react-toastify"
 
-export default function Guide(guide) {
+export default function ClientGuide(guide) {
     const queryClient = useQueryClient();
     const [selectedDay, setSelectedDay] = useState(0);
 
@@ -44,6 +44,7 @@ export default function Guide(guide) {
                     >
                         Delete guide
                     </button>
+                    <button onClick={() => console.log(guide)}>tweqeqweqewest</button>
                     <div className="ml-auto mt-4 mr-2">
                         <select className="bg-slate-500 text-black rounded-md" onChange={handleDayChange}>
                             <option value="0">-- Select a Day --</option>
@@ -56,11 +57,11 @@ export default function Guide(guide) {
                     </div>
                 </div>
                 {selectedDay !== null && (
-                    <div className="h-full ">    
-                        <Day days={guide?.guide?.days[selectedDay]} />
+                    <div className="h-full ">
+                        <ClientDay days={guide?.guide?.days[selectedDay]} />
                     </div>
                 )}
             </div>
         )
-}
+    }
 }

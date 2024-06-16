@@ -1062,23 +1062,6 @@ app.post("/test", verifyToken, async (req, res) => {
     const userId = req.userId;
 
     try {
-      const response = await openai.chat.completions.create({
-          model: "gpt-3.5-turbo-1106",
-          response_format:{"type": "json_object"},
-          messages: [
-              { "role": "system", "content": "You are a helpful assistant designed to output valid JSON. Here are all the guidelines you should refer to when answering: " + guideLines + "this is exactly how a day should be structured :" + dayOutput},
-              { "role": "user", "content": prompt },
-          ], 
-          max_tokens: 4096,
-      });
-
-      console.log(" Respone from chatgpt:", response.choices[0])
-
-      if (!response) {
-        res.send({ error: "Something went wrong with creating the guide!"})
-        return;
-      };
-
       const trainer = await prisma.user.findUnique({
         where: { id: trainerId }
       });
@@ -1105,6 +1088,23 @@ app.post("/test", verifyToken, async (req, res) => {
         return;
       };
 
+      const response = await openai.chat.completions.create({
+          model: "gpt-3.5-turbo-1106",
+          response_format:{"type": "json_object"},
+          messages: [
+              { "role": "system", "content": "You are a helpful assistant designed to output valid JSON. Here are all the guidelines you should refer to when answering: " + guideLines + "this is exactly how a day should be structured :" + dayOutput},
+              { "role": "user", "content": prompt },
+          ], 
+          max_tokens: 4096,
+      });
+
+      console.log(" Respone from chatgpt:", response.choices[0])
+
+      if (!response) {
+        res.send({ error: "Something went wrong with creating the guide!"})
+        return;
+      };
+    
       const guideData = JSON.parse(response.choices[0].message.content)
 
       if (!guideData) {
@@ -1300,6 +1300,9 @@ app.get("/get-current-user", verifyToken, async (req, res) => {
       const user = await prisma.user.findUnique({
         where: { id: userId },
         include: {
+          cart: {
+            include: {cartItems:true}
+          },
           trainer: {
             include: {clients:true}
           },
@@ -1406,9 +1409,7 @@ app.post("/update-message", verifyToken, async (req,res) => {
 
     const messageToUpdate = await prisma.message.update({
       where: {id: messageId.messageId},
-      data: {
-        read: true 
-      }
+      
     });
 
   } catch (error) {
@@ -1473,7 +1474,7 @@ app.post("/send-message", verifyToken, async (req,res ) => {
       return;
     };
 
-    if (!sender.role !== "TRAINER" || !sender.role !== "ADMIN") {
+    if (sender.role !== "TRAINER") {
       const response = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
@@ -1523,7 +1524,6 @@ app.get("/get-messages", verifyToken, async (req,res) => {
     const sentMessages = await prisma.message.findMany({
       where:{ senderId: user.id },
       orderBy: [
-        { read: 'asc' }, 
         { createdAt: 'desc' }
       ], 
       include: {recipient:true, sender:true}
@@ -1532,7 +1532,6 @@ app.get("/get-messages", verifyToken, async (req,res) => {
     const recievedMessages = await prisma.message.findMany({
       where: { recipientId: user.id },
       orderBy: [
-        { read: 'asc' },
         { createdAt: 'desc' }
       ],
       include: { recipient: true, sender: true }
@@ -1603,13 +1602,6 @@ app.post("/edit-profile", verifyToken, async (req, res) => {
       }
     });
 
-
-
-
-
-
-
-
   } catch (error) {
     console.log("Error updating profile :", error);
     res.send({ error: "Something went wrong, try again later!" })
@@ -1617,6 +1609,509 @@ app.post("/edit-profile", verifyToken, async (req, res) => {
   }
 });
 
+// --------------------------------- DELETE GUIDE ------------------------------------
+
+app.post("/delete-guide", verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const {clientId} = req.body;  
+  console.log("userId", userId)
+  console.log("clientId", clientId)
+
+
+  try {
+
+    const userTryingToDelete =  await prisma.user.findUnique({
+      where: {id: userId}
+    });
+
+    const guide = await prisma.guide.findFirst({
+      where: { clientId: clientId },
+      include: { client: true }
+    });
+
+    if (!guide) {
+      res.send({ error: "Guide not found!" });
+      return;
+    }
+
+    if (userId !== guide.clientId && userTryingToDelete.role !== "TRAINER"  ) {
+      res.send({ error: "User is unauthorized to delete the guide!" });
+      return;
+    }
+
+    await prisma.guide.delete({
+      where: { id: guide.id }
+    });
+
+    const remainingGuides = await prisma.guide.findMany({
+      where: { clientId: guide.clientId }
+    });
+
+    if (remainingGuides.length === 0 && guide.client.trainerId) {
+  
+      await prisma.user.update({
+        where: { id: guide.clientId },
+        data: { trainerId: null }
+      });
+
+    
+      await prisma.user.update({
+        where: { id: guide.client.trainerId },
+        data: {
+          clients: {
+            disconnect: { id: guide.clientId }
+          }
+        }
+      });
+
+      await prisma.message.deleteMany({
+        where: {
+          OR: [
+            {
+              senderId: guide.clientId,
+              recipientId: guide.client.trainerId
+            },
+            {
+              senderId: guide.client.trainerId,
+              recipientId: guide.clientId
+            }
+          ]
+        }
+      });
+    }
+
+    res.send({success: "Guide has been deleted"});
+
+
+
+  } catch (error) {
+    console.log("Error deleting guide: ", error);
+    res.send({error: "Something went wrong, try again later!"});
+    return;
+  }
+
+});
+
+// ------------------------------ GET TRAINER -----------------------------------------
+
+app.get("/get-current-trainer", verifyToken, async (req, res) => {
+  const userId = req.userId;
+
+  try {
+
+    const trainer = await prisma.user.findUnique({
+      where: { id: userId, role: "TRAINER" },
+      include: {
+        clients: {
+          include: {
+            sentMessages: {
+              orderBy: { createdAt: "desc" },
+              include: {
+                sender: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    userName: true,
+                    email: true,
+                    role: true,
+                    profileImage: true,
+                    trainerId: true
+                  }
+                }, recipient: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    userName: true,
+                    email: true,
+                    role: true,
+                    profileImage: true,
+                    trainerId: true
+                  }
+                }
+              }
+            },
+            receivedMessages: {
+              orderBy: { createdAt: "desc" },
+              include: {
+                recipient: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    userName: true,
+                    email: true,
+                    role: true,
+                    profileImage: true,
+                    trainerId: true
+                  }
+                }, sender: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    userName: true,
+                    email: true,
+                    role: true,
+                    profileImage: true,
+                    trainerId: true
+                  }
+                }
+              }
+            },
+            guides: {
+              include: {
+                days: {
+                  include: {
+                    mealPlans: {
+                      include: {
+                        ingredients: true
+                      },
+                    },
+                    exercises: true,
+                  },
+                },
+              },
+            },
+          }
+        },
+      },
+    });
+
+    res.send({success: trainer})
+
+
+
+  } catch (error) {
+    console.log("Error getting trainer:", error);
+    res.send({error: "Something went wrong, try again later!"});
+    return;
+  }
+
+});
+
+
+//---------------- GET USER BY ID ----------------------------------
+
+app.post("/get-user-by-id", async (req,res) => {
+  const {userId}  = req.body;
+
+  try {
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        cart: true,
+        sentMessages: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                userName: true,
+                email: true,
+                role: true,
+                profileImage: true,
+                trainerId: true
+              }
+            }, recipient: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                userName: true,
+                email: true,
+                role: true,
+                profileImage: true,
+                trainerId: true
+              }
+            }
+          }
+        },
+        receivedMessages: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            recipient: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                userName: true,
+                email: true,
+                role: true,
+                profileImage: true,
+                trainerId: true
+              }
+            }, sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                userName: true,
+                email: true,
+                role: true,
+                profileImage: true,
+                trainerId: true
+              }
+            }
+          }
+        },
+        guides: {
+          include: {
+            days: {
+              include: {
+                mealPlans: {
+                  include: {
+                    ingredients: true
+                  },
+                },
+                exercises: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+
+    res.send({success: user});
+
+  } catch (error) {
+    console.log("Error getting user by id:", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+
+
+});
+
+app.post("/get-messages-from-client", verifyToken, async (req,res) => {
+  const userId = req.userId;
+  const { clientId } = req.body;
+  
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      res.send({ error: "User could not be found!" });
+      return;
+    };
+
+    if(user.role !== "TRAINER") {
+      res.send({error: "Unautorized access, user is not TRAINER!"});
+      return;
+    }
+
+    const sentMessages = await prisma.message.findMany({
+      where: { senderId: userId, recipientId: clientId },
+      orderBy: [
+        { createdAt: 'desc' }
+      ],
+      include: { recipient: true, sender: true }
+    });
+
+    const recievedMessages = await prisma.message.findMany({
+      where: { senderId: clientId, recipientId: userId },
+      orderBy: [
+        { createdAt: 'desc' }
+      ],
+      include: { recipient: true, sender: true }
+    });
+
+    res.send({ messages: { sentMessages, recievedMessages } });
+  } catch (error) {
+    console.log("Error getting messages from client:", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+});
+
+//----------------------------- CREATE PRODUCT ------------------------------------------
+
+app.post("/create-new-product", async (req,res) => {
+
+  const  productData  = req.body;
+  console.log("ProductData: ",productData)
+
+
+  try {
+
+    if (
+      !productData.title ||
+      !productData.imageUrl ||
+      !productData.price ||
+      !productData.rating ||
+      !productData.quantity 
+    ) {
+      res.send({error: "No fields can be left empty when creating a product!"});
+      return;
+    }
+
+
+    const createdProduct = await prisma.product.create({
+      data: {
+        title: productData.title,
+        imageUrl: productData.imageUrl,
+        price: productData.price,
+        rating: productData.rating,
+        quantity: productData.quantity,
+        special: productData.special && productData.special
+      }
+    });
+
+    if (!createdProduct) {
+      res.send({error: "Error creating product, try again later!"});
+      return;
+    };
+
+
+    res.send({success: createdProduct});
+
+  } catch (error) {
+    console.log("Error creating new product: ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+
+});
+
+
+//----------------- GET ALL PRODUCTS AND SPECIAL PRODUCTS ----------------------
+
+app.get("/get-all-products", async (req,res) => {
+   
+  try {
+
+    const allProducts = await prisma.product.findMany({});
+
+    const specialProducts = await prisma.product.findMany({
+      where: {special: true}
+    });
+
+
+    res.send({products: {allProducts, specialProducts}});
+
+  } catch (error) {
+    console.log("Error getting products: ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+
+});
+
+// ------------------------------- ADD TO CART -------------------------------
+
+app.post("/add-to-cart", verifyToken, async (req,res) => {
+  const userId = req.userId;
+  const {productId} = req.body;
+  console.log("productID:", productId)
+
+
+  try {
+
+    const user = await prisma.user.findUnique({
+      where: {id: userId},
+      include: {cart: true}
+    });
+
+    if(!user) {
+      res.send({error: "User could not be found!"});
+      return;
+    };
+
+
+    let cartId;
+
+    if (user.cart) {
+      cartId = user.cart.id;
+    } else {
+      
+      const newCart = await prisma.cart.create({
+        data: {
+          userId: userId
+        }
+      });
+
+      cartId = newCart.id;
+    };
+
+    const existingCartItem = await prisma.cartItem.findFirst({
+      where: {
+        productId,
+        cartId: cartId
+      }
+    });
+
+    if (existingCartItem) {
+      const updatedCartItem = await prisma.cartItem.update({
+        where: { id: existingCartItem.id },
+        data: {
+          quantity: existingCartItem.quantity + 1
+        }
+      });
+
+      res.send({ success: "Product updated in cart!" });
+
+    } else {
+      const newCartItem = await prisma.cartItem.create({
+        data: {
+          productId,
+          cartId: cartId,
+          quantity: 1
+        }
+      });
+
+      res.send({ success: "Product added to cart!" });
+
+    }
+
+  } catch (error) {
+    console.log("Error adding to cart: ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+
+
+});
+
+
+app.post("/get-product-by-id", async (req, res) => {
+  const {productId} = req.body;
+ console.log(productId)
+
+  try {
+
+    if(!productId) {
+      res.send({error: "No productId provided!"});
+      return;
+    };
+
+    const product = await prisma.product.findUnique({
+      where: {id: productId}
+    });
+
+    if (!product) {
+      res.send({error: "Could not find product!"});
+      return;
+    };
+
+    res.send({success: product})
+
+  } catch (error) {
+    console.log("Error getting product by id : ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  }
+
+});
+
+
+
 app.listen(port, () => {
-    console.log("Server is running on port:", port);
+  console.log("Server is running on port:", port);
 });

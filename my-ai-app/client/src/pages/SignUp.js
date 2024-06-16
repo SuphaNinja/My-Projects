@@ -22,7 +22,7 @@ export default function SignUp() {
         onSuccess: () => {
             toast("Sign up successfull! Redirecting to Login page.");
             setTimeout(() => {
-                navigate("/pages/login")
+                navigate("/login")
                 window.location.reload();
             }, 1000)}
     });

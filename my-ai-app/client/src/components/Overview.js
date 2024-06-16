@@ -15,7 +15,7 @@ export default function Overview ({user, setActiveComponent}) {
             case 'trainer':
                 return <Trainer trainer={user.trainer} setActiveComponent={setActiveComponent}/>;
             case 'GoalTips':
-                return <GoalTips />;
+                return <GoalTips guide={user.guides[0]}/>;
             case 'profile':
                 return <Profile user={user}/>;
             default:

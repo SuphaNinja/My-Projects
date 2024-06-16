@@ -1,6 +1,7 @@
+
+import 'react-toastify/dist/ReactToastify.css'
 import { Route, Routes } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.min.css';
+
 
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
@@ -14,7 +15,7 @@ import Profile from "./pages/Profile";
 function App() {
   return (
     <div className="bg-default h-screen">
-    <ToastContainer />
+    
     <NavBar/>
       <Routes>
         <Route path="/" element={<Home/>}/>
@@ -23,7 +24,9 @@ function App() {
         <Route path="/createpost" element={<CreatePost />} />
         <Route path="/editpost/:postId" element={<EditPost />} />
         <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
       </Routes>
+      
     </div>
   );
 }

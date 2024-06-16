@@ -14,70 +14,73 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  firstName     String?
-  lastName      String?
-  userName      String?
-  email         String   @unique
-  role          String   @default("USER") // Can be "ADMIN", "TRAINER", or "USER"
-  password      String
-  profileImage  String?
+  id                String   @id @default(cuid())
+  firstName         String?
+  lastName          String?
+  userName          String?
+  email             String   @unique
+  role              String   @default("USER") // Can be "ADMIN", "TRAINER", or "USER"
+  password          String
+  profileImage      String?
 
-  trainerId     String?
-  trainer       User?    @relation("TrainerClients", fields: [trainerId], references: [id])
-  clients       User[]   @relation("TrainerClients")
-  guides        Guide[]
+  trainerId         String?
+  trainer           User?    @relation("TrainerClients", fields: [trainerId], references: [id], onDelete: Cascade)
+  clients           User[]   @relation("TrainerClients")
+
+  guides            Guide[]
   
-  sentMessages    Message[]  @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  cart              Cart?
+
+  sentMessages      Message[]  @relation("SentMessages")
+  receivedMessages  Message[] @relation("ReceivedMessages")
 }
 
 model Message {
-  id            String   @id @default(cuid())
-  content       String
-  createdAt     DateTime @default(now())
-  read          Boolean  @default(false)
+  id              String   @id @default(cuid())
+  content         String
+  createdAt       DateTime @default(now())
   
-  senderId      String
-  sender        User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId        String
+  sender          User     @relation("SentMessages", fields: [senderId], references: [id])
   
-  recipientId   String
-  recipient     User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
+  recipientId     String
+  recipient       User     @relation("ReceivedMessages", fields: [recipientId], references: [id])
 }
 
 model Guide {
-  id              Int      @id @default(autoincrement())
-  tipsToReachGoal String
-  days            Day[]
-  trainerId       String?
-  clientId        String
-  client          User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  id               Int      @id @default(autoincrement())
+  tipsToReachGoal  String
+  days             Day[]
+  trainerId        String?
+  clientId         String
+  client           User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
 
+
 model Day {
-  id          Int            @id @default(autoincrement())
-  dayNumber   Int
-  guideId     Int
-  guide       Guide          @relation(fields: [guideId], references: [id], onDelete: Cascade)
-  mealPlans   MealPlan[]
-  exercises   WorkoutExercise[]
+  id            Int            @id @default(autoincrement())
+  dayNumber     Int
+  guideId       Int
+  guide         Guide          @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  mealPlans     MealPlan[]
+  exercises     WorkoutExercise[]
 }
 
 model MealPlan {
-  id           Int              @id @default(autoincrement())
-  mealType     String
-  dayId        Int
-  day          Day              @relation(fields: [dayId], references: [id], onDelete: Cascade)
-  ingredients  Ingredient[]     
+  id            Int              @id @default(autoincrement())
+  mealType      String
+  dayId         Int
+  day           Day              @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  ingredients   Ingredient[]     
 }
 
 model Ingredient {
-  id        Int      @id @default(autoincrement())
-  name      String
-  grams     String
-  calories  String
-  mealPlanId Int
-  mealPlan   MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
+  id            Int      @id @default(autoincrement())
+  name          String
+  grams         String
+  calories      String
+  mealPlanId    Int
+  mealPlan      MealPlan @relation(fields: [mealPlanId], references: [id], onDelete: Cascade)
 }
 
 
@@ -90,4 +93,37 @@ model WorkoutExercise {
   dayId          Int
   day            Day     @relation(fields: [dayId], references: [id], onDelete: Cascade)
 }
+
+model Product {
+  id            String   @id @default(cuid())
+  title         String
+  imageUrl      String
+  price         Float
+  rating        Float
+  quantity      String
+  special       Boolean    @default(false)
+  CartItem      CartItem[] 
+}
+
+model Cart {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  cartItems     CartItem[]
+}
+
+model CartItem {
+  id            String   @id @default(cuid())
+  productId     String
+  cartId        String
+  quantity      Int
+
+  product       Product @relation(fields: [productId], references: [id])
+  cart          Cart    @relation(fields: [cartId], references: [id])
+
+  @@unique([productId, cartId])
+}
+
+
+
 

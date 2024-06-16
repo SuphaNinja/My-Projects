@@ -26,7 +26,7 @@ export default function SubmitButton({ apiInfo }) {
                 className={buttonClass}
                 disabled={apiInfo.isPending || (apiInfo.isSuccess && !apiInfo?.data?.data?.error)}
             >
-                {apiInfo.isPending ? 'Creating guide...' : 'Start your journey!'}
+                {apiInfo.isPending ? 'Creating guide... (this might take a minute or two)' : 'Start your journey!'}
             </button> 
         )
     

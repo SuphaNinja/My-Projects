@@ -1,11 +1,12 @@
 
 import axiosInstance from "../lib/axiosInstance";
 import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 
 export default function Profile({user}) {
+    const queryClient = useQueryClient();
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -14,13 +15,15 @@ export default function Profile({user}) {
         userName: "",
         password: "",
         adminKey: "",
-        profileImage: "",
+        profileImage: null,
         trainerKey: ""
     });
 
     const updateProfile = useMutation({
         mutationFn: (formData) => axiosInstance.post("/edit-profile", formData),
-       
+        onSuccess: () => {
+            queryClient.invalidateQueries(["currentUser"])
+        }
     });
 
 
@@ -35,8 +38,20 @@ export default function Profile({user}) {
     };
     
     const handleEditProfile = () => {
-        updateProfile.mutate(formData);
-        toast("Profile has been updated!");
+        
+        if (
+            user.firstName !== formData.firstName || 
+            user.lastName !== formData.lastName ||
+            user.email !== formData.email ||
+            user.userName !== formData.userName ||
+            user.password !== formData.password ||
+            user.trainerKey !== formData.adminKey ||
+            user.profileImage !== formData.profileImage 
+        ) {
+            toast("Profile has been updated!");
+            updateProfile.mutate(formData);
+        }
+         
     };
 
     useEffect(() => {
@@ -60,7 +75,6 @@ export default function Profile({user}) {
             <div
                 className="w-full -z-1 flex md:items-center md:justify-center "
             >
-                <button onClick={() => console.log(user)}>console.log the user</button>
                 <div className=" md:p-8  md:overflow-hidden md:rounded-xl  text-white flex flex-col w-full ">
                     <div className="md:grid flex gap-4 flex-col max-h-[300px] md:grid-cols-6">
 
@@ -164,7 +178,7 @@ export default function Profile({user}) {
                                     }
                                     <button
                                         onClick={()=>handleEditProfile()}
-                                        className="col-span-2 mx-auto md:col-span-2 py-1 px-4 rounded-md hover:underline hover:bg-slate-800/80 transition-all bg-slate-500/70">
+                                        className="col-span-2 mx-auto md:col-span-1 py-1 px-4 rounded-md hover:underline hover:bg-slate-800/80 transition-all bg-slate-500/70">
                                         Save Changes
                                     </button>
                                 </>
