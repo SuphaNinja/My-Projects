@@ -32,7 +32,9 @@ export default function Client () {
     };
 
     useEffect(()=>{
-        queryClient.invalidateQueries(["client"]);
+        setTimeout(() => {
+            queryClient.invalidateQueries(["client"]);
+        }, 50); 
     }, [params.userId])
 
 

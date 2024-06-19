@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import axiosInstance from "../lib/axiosInstance";
+import axiosInstance from "../lib/axiosInstance";   
+import { toast } from "react-toastify";
 
 
 
@@ -17,6 +18,24 @@ export default function Chat (user) {
             setMessage("")
         }
     });
+
+    const fetchUser = useQuery({
+        queryKey: ["currentUser"],
+        queryFn: () => axiosInstance.get("/get-current-user")
+    });
+    const currentUser = fetchUser?.data?.data?.success;
+
+    const deleteMessage = useMutation({
+        mutationFn: (messageId) => axiosInstance.post("/delete-message", { messageId: messageId })
+    });
+
+    const handleDeleteMessage = (messageId) => {
+        deleteMessage.mutate(messageId);
+        toast("Message has been deleted!");
+        setTimeout(() => {
+            queryClient.invalidateQueries(["messages"]);
+        }, 50);
+    };
 
     const messages = useQuery({
         queryKey: ["messages"],
@@ -87,8 +106,23 @@ export default function Chat (user) {
                                     </div>
 
                                     <div className="col-span-1 ">
-                                        <div className="flex flex-col md:ml-2 overflow-y-auto md:pt-0 md:border-t-0 pt-2 border-t-2 h-full">
-                                            <p className="text-xs text-center  md:my-auto ">{timeAgo(message.createdAt)}</p>
+                                        <div className="flex flex-col md:ml-2 items-center justify-center overflow-y-auto md:pt-0 md:border-t-0 pt-2 border-t-2 h-full">
+                                            <p className="text-xs text-center ">{timeAgo(message.createdAt)}</p>
+                                            {currentUser.role === "TRAINER" ? (
+                                                <button
+                                                    onClick={() => handleDeleteMessage(message.id)}
+                                                    className="text-sm bg-red-500 hover:bg-red-400 rounded-full px-2 py-1 mt-2 hover:scale-105 font-semibold"
+                                                > Delete
+                                                </button>
+                                            ) : (
+                                                currentUser.id === message.sender.id ? (
+                                                    <button 
+                                                        className="text-sm bg-red-500 hover:bg-red-400 rounded-full px-2 py-1 mt-2 hover:scale-105 font-semibold"
+                                                        onClick={() => handleDeleteMessage(message.id)}> Delete</button>
+                                                ) : (
+                                                    null
+                                                )
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -126,8 +160,23 @@ export default function Chat (user) {
                                     </div>
 
                                     <div className="col-span-1 ">
-                                        <div className="flex flex-col md:ml-2 overflow-y-auto md:pt-0 md:border-t-0 pt-2 border-t-2 h-full">
-                                            <p className="text-xs text-center  md:my-auto ">{timeAgo(message.createdAt)}</p>
+                                        <div className="flex flex-col md:ml-2 items-center justify-center overflow-y-auto md:pt-0 md:border-t-0 pt-2 border-t-2 h-full">
+                                            <p className="text-xs text-center   ">{timeAgo(message.createdAt)}</p>
+                                            {currentUser.role === "TRAINER" ? (
+                                                <button
+                                                    onClick={() => handleDeleteMessage(message.id)}
+                                                    className="text-sm bg-red-500 hover:bg-red-400 rounded-full px-2 py-1 mt-2 hover:scale-105 font-semibold"
+                                                > Delete
+                                                </button>
+                                            ) : (
+                                                currentUser.id === message.sender.id ? (
+                                                    <button 
+                                                        className="text-sm bg-red-500 hover:bg-red-400 rounded-full px-2 py-1 mt-2 hover:scale-105 font-semibold"
+                                                        onClick={() => handleDeleteMessage(message.id)}> Delete</button>
+                                                ) : (
+                                                    null
+                                                )
+                                            )}
                                         </div>
                                     </div>
                                 </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ClientDay from "./ClientDay";
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import axiosInstance from "../../lib/axiosInstance";
@@ -27,9 +27,21 @@ export default function ClientGuide(guide) {
     });
 
 
-    const handleDayChange = (event) => {
-        setSelectedDay(event.target.value);
+  
+
+
+    useEffect(() => {
+        const today = new Date();
+        const currentDayIndex = today.getDay(); 
+        setSelectedDay(currentDayIndex -1);
+    }, []);
+
+
+    const onChange = (event) => {
+        const value = event.target.value;
+        setSelectedDay(value);
     };
+
     if (!guide) {
         return (
             <div>No guide on this account!</div>
@@ -44,9 +56,12 @@ export default function ClientGuide(guide) {
                     >
                         Delete guide
                     </button>
-                    <button onClick={() => console.log(guide)}>tweqeqweqewest</button>
                     <div className="ml-auto mt-4 mr-2">
-                        <select className="bg-slate-500 text-black rounded-md" onChange={handleDayChange}>
+                        <select
+                            className="bg-slate-500 text-black rounded-md"
+                            value={selectedDay}
+                            onChange={onChange}
+                        >
                             <option value="0">-- Select a Day --</option>
                             {days.map((day, index) => (
                                 <option key={index} value={index}>

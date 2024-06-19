@@ -1931,6 +1931,51 @@ app.post("/get-messages-from-client", verifyToken, async (req,res) => {
   }
 });
 
+
+
+app.post("/delete-message", verifyToken, async (req,res) => {
+  const userId = req.userId;
+
+  const {messageId} = req.body;
+  console.log("MessageId :", messageId)
+
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: {id: userId}
+    });
+
+    if (!user) {
+      res.send({error: "User not found!"});
+      return;
+    };
+
+    const messageToDelete = await prisma.message.findUnique({
+      where: {id:messageId}
+    });
+
+    if (!messageToDelete) {
+      res.send({error: "Message to delete could not be found!"});
+      return;
+    };
+
+    if (user.id !== messageToDelete.senderId && user.role !== "TRAINER") {
+      res.send({error: "Unautorized delete request!"});
+      return;
+    };
+
+    const deleteMessage = await prisma.message.delete({
+      where: {id: messageToDelete.id}
+    });
+
+    res.send({success: "Message has been deleted!"});
+
+  } catch (error) {
+    console.log("Error deleting message:", error);
+    res.send({error: "Something went wrong, please try again later!"});
+  }
+});
+
 //----------------------------- CREATE PRODUCT ------------------------------------------
 
 app.post("/create-new-product", async (req,res) => {
@@ -2042,7 +2087,7 @@ app.post("/add-to-cart", verifyToken, async (req,res) => {
 
     const existingCartItem = await prisma.cartItem.findFirst({
       where: {
-        productId,
+        productId: productId,
         cartId: cartId
       }
     });
@@ -2060,7 +2105,7 @@ app.post("/add-to-cart", verifyToken, async (req,res) => {
     } else {
       const newCartItem = await prisma.cartItem.create({
         data: {
-          productId,
+          productId: productId,
           cartId: cartId,
           quantity: 1
         }
@@ -2077,6 +2122,84 @@ app.post("/add-to-cart", verifyToken, async (req,res) => {
   }
 
 
+});
+
+app.post("/update-cart-item", verifyToken, async (req,res) => {
+  const userId = req.userId;
+  const {cartItemId} = req.body;
+  const {quantity} = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: {id: userId}
+    });
+
+    if (!user) {
+      res.send({error: "User could not be found!"});
+      return;
+    };
+
+    const cartItemToUpdate = await prisma.cartItem.findUnique({
+      where: {id: cartItemId}
+    });
+
+    if (!cartItemToUpdate) {
+      res.send({error: "Cart to update could not be found!"});
+      return;
+    };
+
+    if (quantity < 1) {
+      await prisma.cartItem.delete({
+        where: {id: cartItemToUpdate.id}
+      });
+    } else {
+      await prisma.cartItem.update({
+        where: {id: cartItemToUpdate.id},
+        data: {
+          quantity: parseInt(quantity)
+        }
+      });
+    };
+
+    res.send({success: "Cart has been updated!"});
+    
+  } catch (error) {
+    console.log("Error updating cart : ", error);
+    res.send({error: "Something went wrong, please try again later!"});
+    return;
+  };
+});
+
+app.post("/delete-cart-item", verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const { cartItemId } = req.body;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      res.send({ error: "User could not be found!" });
+      return;
+    };
+
+    const cartItemToDelete = await prisma.cartItem.delete({
+      where: { id: cartItemId }
+    });
+
+    if (!cartItemToDelete) {
+      res.send({error: "Something went wrong when trying to delete!"});
+      return;
+    };
+
+    res.send({ success: "Cartitem has been deleted!" });
+
+  } catch (error) {
+    console.log("Error updating cart : ", error);
+    res.send({ error: "Something went wrong, please try again later!" });
+    return;
+  };
 });
 
 
@@ -2109,6 +2232,9 @@ app.post("/get-product-by-id", async (req, res) => {
   }
 
 });
+
+
+
 
 
 

@@ -28,11 +28,6 @@ export default function ClientOverview({ user, setActiveComponent }) {
             <div className="w-full md:px-12 flex flex-col">
                 <div className="flex justify-evenly">
                     <button
-                        onClick={() => setActiveOverview('trainer')}
-                        className={`md:text-xl transition-all ml-8 hover:font-semibold hover:underline ${activeOverview === 'trainer' ? " text-white font-semibold underline" : "text-slate-300"}`}>
-                        Trainer
-                    </button>
-                    <button
                         onClick={() => setActiveOverview('clientinfo')}
                         className={`md:text-xl transition-all hover:font-semibold  hover:underline ${activeOverview === 'clientinfo' ? " text-white font-semibold underline " : "text-slate-300"}`}>
                         Client information
