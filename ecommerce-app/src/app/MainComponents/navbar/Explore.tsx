@@ -2,7 +2,7 @@
 
 export default function Explore() {
     return (
-        <div className="absolute bg-slate-200/90 w-full text-black top-20 z-10 p-4 sm:flex-row flex-col">
+        <div className="absolute bg-background/80 top-36 w-screen sm:top-16 z-50 p-4 md:flex-row flex-col">
             <div className="flex flex-col sm:flex-row gap-4">
                 <div className="w-full sm:w-1/4">
                     <h1 className="text-xl font-bold">Electronics</h1>

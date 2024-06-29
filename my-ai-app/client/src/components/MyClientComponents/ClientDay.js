@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ClientExercise from "./ClientExercise";
 import ClientMeal from "./ClientMeal";
+import { Button } from "../ui/button";
 
 
 export default function ClientDay(day) {
@@ -40,16 +41,18 @@ export default function ClientDay(day) {
                 <p className="text-4xl mb-2 font-semibold text-center mx-auto">{days[day.days?.dayNumber - 1]}</p>
             </div>
             <div className="w-full h-full flex justify-center gap-24">
-                <button
+                <Button
+                    variant="link"
                     onClick={() => setActiveComponent('exercise')}
-                    className={`md:text-xl transition-all hover:font-semibold hover:underline ${activeComponent === 'exercise' ? " text-white font-semibold underline" : "text-slate-300"}`}>
+                    className={` ${activeComponent === 'exercise' && "underline"}`}>
                     Exercises
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant="link"
                     onClick={() => setActiveComponent('meal')}
-                    className={`md:text-xl transition-all hover:font-semibold hover:underline ${activeComponent === 'meal' ? " text-white font-semibold underline" : "text-slate-300"}`}>
+                    className={` ${activeComponent === 'meal' && "underline"}`}>
                     Meals
-                </button>
+                </Button>
             </div>
             <div>
                 {renderComponent()}

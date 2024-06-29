@@ -6,12 +6,13 @@ import { toast } from "react-toastify";
 import { HeartIcon, UserCircleIcon } from '@heroicons/react/24/solid'
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
 
 
 export default function Comment(comment) {
 
-    const [isEditing, setIsEditing ] = useState(false);
-    const [ editCommentData, setEditCommentData ] = useState({
+    const [isEditing, setIsEditing] = useState(false);
+    const [editCommentData, setEditCommentData] = useState({
         content: "",
         commentId: ""
     });
@@ -47,7 +48,7 @@ export default function Comment(comment) {
         }
 
         return `${Math.floor(seconds)} seconds ago`;
-    }
+    };
 
     const currentUser = useQuery({
         queryKey: ["currentUser"],
@@ -55,7 +56,7 @@ export default function Comment(comment) {
     });
 
     const deleteComment = useMutation({
-        mutationFn: (commentId) => axiosInstance.post("/delete-comment", {commentId})
+        mutationFn: (commentId) => axiosInstance.post("/delete-comment", { commentId })
     });
 
     const handleDeleteComment = (commentId) => {
@@ -68,7 +69,14 @@ export default function Comment(comment) {
 
     const editComment = useMutation({
         mutationFn: (commentData) => axiosInstance.post("/edit-comment", { commentData }),
-        onSuccess: () => toast("Comment has been edited!")
+        onSuccess: (data) => {
+            if(data.data.error) {
+                toast.error(`${data.data.error}`)
+            } else {
+                toast.success("Comment has been edited!")
+            }
+            
+        }
     });
 
     const handleEditAndSubmit = (commentData) => {
@@ -86,8 +94,6 @@ export default function Comment(comment) {
         }
     };
 
-    
-
     const likeComment = useMutation({
         mutationFn: () => axiosInstance.post("/like-comment", { comment }),
         onSuccess: () => {
@@ -103,7 +109,7 @@ export default function Comment(comment) {
                 content: comment.comment.content,
                 commentId: comment.comment.id
             })
-        }
+        };
     }, [comment]);
 
     const handleChange = (e) => {
@@ -114,35 +120,31 @@ export default function Comment(comment) {
             [name]: value
         }));
     };
-    
 
     const isLiked = (comment, currentUser) => {
         return comment.comment.likes.some(like => like.userId === currentUser?.id);
     };
 
-    if (comment.comment.length < 1) {
-        return (
-            <p className="text-xl">No comments yet!</p>
-        )
-    } else {
-        return (
-            <div className="grid border-2 bg-default grid-cols-6 p-1">
-                <div className="col-span-1 flex flex-col">
-                    <div className="flex justify-center my-auto">
-                        {comment.comment.user.Profilemage !== null ?
-                            <img src={comment.comment.user.Profilemage} />
-                            :
-                            <UserCircleIcon width={60} />
-                        }
-                    </div>
+    if (comment.comment.length < 1) { return ( <p className="text-xl ">No comments yet!</p> )};
+
+    return (
+        <div className="grid  grid-cols-6">
+            <div className="col-span-1 flex flex-col">
+                <div className="flex justify-center my-auto">
+                    {comment.comment.user.Profilemage !== null ?
+                        <img src={comment.comment.user.Profilemage} />
+                        :
+                        <UserCircleIcon width={60} />
+                    }
                 </div>
-                <div className="col-span-4 border-x-2 px-2">
-                    <Link to={`/profile/${comment.comment.user.id}`} className=" hover:underline">{comment.comment.user.userName} -
-                        <span className={`${comment.comment.user.role === "ADMIN" ? "text-red-500" : "text-emerald-400"} ml-1 text-sm`}>{comment.comment.user.role}</span>
-                    </Link>
-                    <p className="text-xs text-gray-400 ">{formatTimeAgo(comment.comment.created_at)}</p>
-                    <div className="overflow-y-auto scroll-smooth  max-h-[70px]">
-                        {isEditing ? 
+            </div>
+            <div className="col-span-4 border-x-2 px-2">
+                <Link to={`/profile/${comment.comment.user.id}`} className=" hover:underline">{comment.comment.user.userName} -
+                    <span className={`${comment.comment.user.role === "ADMIN" ? "text-red-500" : "text-emerald-400"} ml-1 text-sm`}>{comment.comment.user.role}</span>
+                </Link>
+                <p className="text-xs text-gray-400 ">{formatTimeAgo(comment.comment.created_at)}</p>
+                <div className="overflow-y-auto max-h-[70px]">
+                    {isEditing ?
                         <input
                             name="content"
                             className="rounded-md text-sm px-1 py-1 w-full"
@@ -152,47 +154,49 @@ export default function Comment(comment) {
                         />
                         :
                         <p className="text-pretty">{comment.comment.content}</p>
-                        }
-                    </div>
-                </div>
-                <div className="col-span-1 w-full flex flex-col ">
-                    <button
-                        className="flex mx-auto my-auto"
-                        onClick={() => likeComment.mutate()}>
-                        {!isLiked(comment, currentUser.data.data.success) ?
-                            <div 
-                                className="flex justify-center items-center"> 
-                                <HeartIcon width={25} />{comment.comment.likes.length > 0 ? (comment.comment.likes.length) : null}
-                            </div>
-                            :
-                            <div 
-                                className="flex relative">
-                                <HeartIcon color="red" fill="red" width={25} />
-                                <span className="font-semibold">
-                                    {comment.comment.likes?.length > 0 ? (comment.comment.likes.length) : null}
-                                </span>
-                            </div>
-                        }
-                    </button>
-                    {currentUser?.data?.data?.success?.id === comment.comment.userId && 
-                        <button
-                            onClick={() => handleEditAndSubmit(editCommentData)}
-                            className="bg-important px-2 mt-auto text-white text-xs text-nowrap rounded-xl py-1  hover:brightness-75"
-                        >
-                            {isEditing ? "Submit" : "Edit"}
-                        </button>
                     }
-                    {currentUser?.data?.data?.success?.role === "ADMIN" ? 
-                        <button 
-                            onClick={() => handleDeleteComment(comment.comment.id)} 
-                            className="bg-red-500 px-2 mt-auto text-white text-xs text-nowrap rounded-xl py-1  hover:brightness-75">
-                            Delete!
-                        </button>
-                    :null
-                    }
-                    
                 </div>
             </div>
-        )
-    }
+            <div className="col-span-1 w-full flex flex-col ">
+                <button
+                    className="flex mx-auto my-auto"
+                    onClick={() => likeComment.mutate()}>
+                    {!isLiked(comment, currentUser.data.data.success) ?
+                        <div
+                            className="flex justify-center items-center">
+                            <HeartIcon width={25} />{comment.comment.likes.length > 0 ? (comment.comment.likes.length) : null}
+                        </div>
+                        :
+                        <div
+                            className="flex relative">
+                            <HeartIcon color="red" fill="red" width={25} />
+                            <span className="font-semibold">
+                                {comment.comment.likes?.length > 0 ? (comment.comment.likes.length) : null}
+                            </span>
+                        </div>
+                    }
+                </button>
+                {currentUser?.data?.data?.success?.id === comment.comment.userId &&
+                    <Button
+                        onClick={() => handleEditAndSubmit(editCommentData)}
+                        size="xs"
+                    >
+                        {isEditing ? "Submit" : "Edit"}
+                    </Button>
+                }
+                {currentUser?.data?.data?.success?.role === "ADMIN" ?
+                    <Button
+                        onClick={() => handleDeleteComment(comment.comment.id)}
+                        className="mt-2"
+                        variant="destructive"
+                        size="xs"
+                        >
+                        Delete!
+                    </Button>
+                    : null
+                }
+            </div>
+        </div>
+    )
+    
 }

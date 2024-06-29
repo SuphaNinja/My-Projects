@@ -9,7 +9,7 @@ import { toast, useToast } from "@/components/ui/use-toast"
 
 
 
-export default function Card({ card, clickedCard, setClickedCard, gameSession, currentPlayerId  }:any) {
+export default function Card({ card, clickedCard, setClickedCard, gameSession, currentPlayerId }:any) {
 
     const { toast } = useToast();
 
@@ -52,7 +52,7 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
         };
 
         setClickedCard(card);
-    }
+    };
 
 
     

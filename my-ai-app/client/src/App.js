@@ -1,5 +1,3 @@
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import NavBar from "./components/NavBar";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
@@ -13,13 +11,9 @@ import ProductPage from "./pages/ProductPage";
 import ShoppingCart from "./pages/ShoppingCart";
 import Footer from "./components/Footer";
 
-
-
-
 function App() {
-
   return (
-    <div className="bg-slate-400 min-h-screen">
+    <div className=" min-h-screen">
       <NavBar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -33,8 +27,7 @@ function App() {
         <Route path="/productPage/:productId" element={<ProductPage />} />
         <Route path="/shoppingcart" element={<ShoppingCart />} />
       </Routes>
-      <Footer/>
-      <ToastContainer />
+      <Footer />
     </div>
   );
 }

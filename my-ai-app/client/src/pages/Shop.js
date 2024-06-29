@@ -1,13 +1,11 @@
-import { useQueries, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../lib/axiosInstance";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
-
-
-
+import { Skeleton } from "src/components/ui/skeleton";
+import { Button } from "src/components/ui/button";
 
 export default function Shop () {
-
     const currentUser = useQuery({
         queryKey: ["currentUser"],
         queryFn: () => axiosInstance.get("/get-current-user")
@@ -20,14 +18,29 @@ export default function Shop () {
     });
 
     const products = allProducts?.data?.data;
+
+    if (allProducts.isLoading) {
+        return (
+            <div className="flex flex-wrap items-center justify-center space-y-3 space-x-3">
+                {[...Array(8)].map((_, index) => (
+                    <div key={index} className="flex flex-col space-y-3">
+                        <Skeleton className="h-[300px] w-[400px] rounded-xl" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-8 w-[400px]" />
+                            <Skeleton className="h-8 w-[400px]" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    };
     
     if (products) {
         return (
-            <div className="md:w-screen ">
+            <div className="md:w-screen">
                 <p className="text-center pt-24 text-lg font-semibold md:text-4xl"> Reach your goals with our award winning products</p>
                 <div className="flex justify-center md:w-full">
-                
-                    <div className="grid md:gap-12  md:p-12 grid-cols-12 ">
+                    <div className="grid md:gap-12 md:p-12 grid-cols-12 ">
                         {products.products?.allProducts?.map((product, index) => (
                             <div className="col-span-12 md:col-span-4 lg:col-span-3" key={index}>
                                 <ProductCard product={product} user={user}/>
@@ -37,62 +50,46 @@ export default function Shop () {
                 </div>
             </div>
         )
-    }
+    };
 }
 
-
-const ProductCard = ({product ,user }) => {
+const ProductCard = ({ product , user}) => {
     const queryClient = useQueryClient();
     const addToCart = useMutation({
-        mutationFn: () => axiosInstance.post("/add-to-cart", { productId: product.id })
+        mutationFn: () => axiosInstance.post("/add-to-cart", { productId: product.id, productPrice: product.price }),
+        onSuccess: (data)=> {
+            queryClient.invalidateQueries(["currentUser"]);
+            if (data.data.success) { toast(data.data.success) };
+            if (data.data.error) { toast(data.data.error) };
+        }
     });
-
-    const handleAddToCart = () => {
-        addToCart.mutate()
-        toast("Item added to cart.")
-        queryClient.invalidateQueries(["currentUser"])
-    };
     
-
     return (
-        <div className='md:h-full bg-slate-300 border-t-4 md:border-t-0 md:rounded-xl md:shadow-xl md:p-4 md:w-full h-full w-full flex flex-col'>
-            <div className='h-2/3 md:1/2 w-full flex items-center'>
-
-                <img
-                    src={product.imageUrl}
-                    alt={`Image of ${product.title}`}
-                    className={`object-cover rounded-xl size-full }`}
-                />
-
-            </div>
+        <div className='h-full w-full flex flex-col md:p-2'>
+            <img
+                src={product.imageUrl}
+                alt={`Image of ${product.title}`}
+                className="object-cover h-2/3 rounded-sm"
+            />
             <div className='flex flex-col justify-between h-1/3 md:1/2 w-full'>
                 <div className='flex flex-col gap-2 mt-2 '>
-                    <div className='flex justify-between'>
+                    <div className='flex border-b justify-between'>
                         <StarRating rating={product.rating} />
                         <p>Price: <span>{product.price} $</span></p>
                     </div>
-                    <hr />
-                    <p className='text-center first-letter:uppercase text-lg font-semibold'>{product.title}</p>
-                    <p className="text-sm ml-auto mr-2 mb-2">{product.quantity}</p>
+                    <p className='text-center first-letter:uppercase text-lg'>{product.title}</p>
+                    <p className="text-sm ml-auto ">{product.quantity}</p>
                 </div>
-                <div className="flex w-full justify-between">
-                    <Link
-                        className='text-center mb-2 md:w-auto w-1/2 font-semibold text-large hover:bg-slate-400 transition-all hover:underline py-2 px-4 bg-slate-600 hover:scale-105 md:rounded-xl'
-                        to={"/productpage/" + product.id}>View
-                    </Link>
+                <div className="flex mb-2 md:mx-0 mx-4 justify-between">
+                    <Button asChild size="sm">
+                        <Link to={"/productpage/" + product.id}>View Product</Link>
+                    </Button>
                     {user?.email ? (
-                        <button
-                            onClick={handleAddToCart}
-                            className='text-center md:w-auto w-1/2 mb-2 font-semibold text-large hover:bg-slate-400 transition-all hover:underline py-2 px-4 bg-slate-600 hover:scale-105 md:rounded-xl'
-                        >
-                            Add to cart
-                        </button>
+                        <Button size="sm" onClick={addToCart.mutate}>Add to cart</Button>
                     ) : (
-                        <Link
-                                className='text-center md:w-auto w-1/2 mb-2 font-semibold text-large hover:bg-slate-400 transition-all hover:underline py-2 px-4 bg-slate-600 hover:scale-105 md:rounded-xl'
-                            to="/login">
-                            Login
-                        </Link>
+                        <Button asChild size="sm">
+                            <Link to="/login">Login</Link>
+                        </Button>
                     )}
                 </div>
             </div>
@@ -123,4 +120,4 @@ const StarRating = ({ rating }) => {
     };
 
     return <div className="text-sm">{renderStars()}</div>;
-};
+}

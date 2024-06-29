@@ -3,7 +3,8 @@ import { useParams } from "next/navigation";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import PageStructure from "@/app/MainComponents/PageStructure";
-import ProductCard from "../ProductCard";
+import ProductCard from "../../MainComponents/ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Page() {
     const params = useParams();
@@ -15,20 +16,28 @@ export default function Page() {
 
     return (
         <PageStructure>
-            <button onClick={() => console.log(productsData)}>test</button>
             <h2 className="ml-4 mt-2">
                 Results for - <span className="font-semibold first-letter:uppercase">{params.categoryName as string}</span>
             </h2>
-            <hr className="mb-2" />
-            {!productsLoading && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 px-4">
-                    {productsData?.products.map((product: any, index: any) => (
-                        <div className="bg-slate-50 border-2 border-slate-300 p-6 rounded-xl overflow-hidden" key={index}>
+            <div className="md:mx-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12 lg:gap-20 mt-6">
+                {!productsLoading ? (
+                    productsData?.products.map((product: any, index: any) => (
+                        <div className="max-h-[400px] sm:border-x border-y p-6 sm:rounded-md" key={index}>
                             <ProductCard product={product} />
                         </div>
-                    ))}
-                </div>
-            )}
+                    ))
+                ) : (
+                    Array.from({ length: 9 }).map((_, index) => (
+                        <div key={index} className="h-[350px] space-y-2">
+                            <Skeleton className="h-1/2 w-[250px] rounded-xl" />
+                            <div className="space-y-2 h-1/2">
+                                <Skeleton className="h-4 w-[250px]" />
+                                <Skeleton className="h-4 w-[200px]" />
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
         </PageStructure>
     );
 }

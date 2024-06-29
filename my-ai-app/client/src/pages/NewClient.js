@@ -3,11 +3,16 @@ import axiosInstance from "../lib/axiosInstance";
 import { useEffect, useState } from "react";
 import axios from "axios"
 import SubmitButton from "../components/ui/SubmitButton";
+import { Label } from "src/components/ui/label";
+import { Input } from "src/components/ui/input";
+import { Textarea } from "src/components/ui/textarea";
+import { CustomSelect } from "src/components/ui/CustomSelect";
+import { cn } from "src/lib/utils";
+
 
 
 
 export default function NewClient() {
-
     const [formData, setFormData] = useState({
         age: 15,
         gender: "Male",
@@ -26,7 +31,7 @@ export default function NewClient() {
     Maximum days a week to train: ${formData.maxTraining}, Description of the goal im trying to achieve: ${formData.description}`;
 
     const generateAiAnswer = useMutation({
-        mutationFn: (infoString) => axiosInstance.post("/test", { prompt: infoString, trainerId: formData.trainerId })
+        mutationFn: (infoString) => axiosInstance.post("/create-guide", { prompt: infoString, trainerId: formData.trainerId })
     });
 
     const trainers = useQuery({
@@ -49,24 +54,22 @@ export default function NewClient() {
     };
 
     return (
-        <div className="flex items-center pb-32 md:mt-16 md:mx-60 jusitfy-center">
-            <div className="bg-slate-500  md:rounded-md flex md:mt-0 mt-16 flex-col w-full h-full">
-                <form onSubmit={handleSubmit} className="text-white p-6 grid grid-cols-4 gap-2">
+        <div className="flex items-center md:mt-16 h-screen jusitfy-center">
+            <div className="md:rounded-md flex  md:mt-0 md:w-2/3 w-full mx-auto mt-32 flex-col h-full">
+                <form onSubmit={handleSubmit} className="p-6 grid grid-cols-4 gap-2">
                     <h1 className="text-center col-span-4 md:text-2xl fontsemibold text-xl">Reach Your goals!</h1>
                     {generateAiAnswer.isError && <p className="text-red-700 col-span-4 font-bold text-center text-xl">Something went wrong, please try again later!</p>}
                     {generateAiAnswer?.data?.data?.success && <p className="text-green-600 col-span-4 font-bold text-center text-xl">{generateAiAnswer?.data?.data?.success}</p>}
                     {generateAiAnswer?.data?.data?.error && <p className="text-red-700 col-span-4 font-bold text-center text-xl">{generateAiAnswer?.data?.data?.error}</p>}
-                    {generateAiAnswer.isSuccess && !generateAiAnswer?.data?.data?.error ? (
-                        <div></div>
-                    ) : 
+                    {generateAiAnswer.isSuccess && !generateAiAnswer?.data?.data?.error ? (<div></div>) 
+                    : 
                     <>
                     <div className="col-span-4 md:col-span-2">
-                        <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Currently training</label>
+                        <Label htmlFor="currentlyTraining">Currently training</Label>
                         <select
                             name="currentlyTraining"
                             value={formData.currentlyTraining}
                             onChange={handleChange}
-                            className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
                             disabled={generateAiAnswer.isPending}
                         >
@@ -78,12 +81,11 @@ export default function NewClient() {
                         </select>
                     </div>
                     <div className="col-span-4 md:col-span-2">
-                        <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Maximum training days per week</label>
+                        <Label htmlFor="maxTraining">Maximum training days per week</Label>
                         <select
                             name="maxTraining"
                             value={formData.maxTraining}
                             onChange={handleChange}
-                            className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
                             disabled={generateAiAnswer.isPending}
                         >
@@ -94,42 +96,40 @@ export default function NewClient() {
                         </select>
                     </div>
                     <div className="col-span-2 md:col-span-1 ">
-                        <label htmlFor="age" className="block text-sm font-medium text-white mb-2">Age</label>
-                        <input
+                        <Label htmlFor="age">Age</Label>
+                        <Input
                             name="age"
                             type="number"
                             value={formData.age}
                             onChange={handleChange}
                             min="15"
-                            max="80"
-                            className="md:w-1/2 p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
+                            max="99"
                             required
                             disabled={generateAiAnswer.isPending}
                         />
                     </div>
                     <div className="col-span-2 md:col-span-1">
-                        <label htmlFor="gender" className="block text-sm font-medium text-white mb-2">Gender</label>
+                        <Label htmlFor="gender">Gender</Label>
                         <select
                             name="gender"
                             value={formData.gender}
                             onChange={handleChange}
-                            className="md:w-2/3 bg-slate-800 p-2 border-2 border-gray-300 rounded-lg"
                             required
                             disabled={generateAiAnswer.isPending}
                         >
                             <option value="male">Male</option>
                             <option value="female">Female</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
                     <div className="col-span-4 md:col-span-2">
-                        <label htmlFor="goal" className="block text-white">Goal Duration</label>
+                        <Label htmlFor="goalDuration">Goal Duration</Label>
                         <select
                             name="goalDuration"
                             value={formData.goalDuration}
                             onChange={handleChange}
                             required
                             disabled={generateAiAnswer.isPending}
-                            className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                         >
                             <option value="">Select Duration</option>
                             <option value="less_than_a_month">Less than a month</option>
@@ -139,76 +139,62 @@ export default function NewClient() {
                             <option value="more_than_a_year">More than a year</option>
                         </select>
                     </div>
-                            <div className="col-span-4 md:col-span-2">
-                        <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Current Weight</label>
-                        <select
+                    <div className="col-span-4 md:col-span-1">
+                        <Label htmlFor="currentWeight">Current Weight (kg)</Label>
+                        <Input
                             name="currentWeight"
+                            type="number"
                             value={formData.currentWeight}
                             onChange={handleChange}
-                            className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
                             required
                             disabled={generateAiAnswer.isPending}
-                        >
-                            <option value="" disabled>Select your weight</option>
-                            {Array.from({ length: 66 }, (_, i) => i + 45).map((weight) => (
-                                <option key={weight} value={weight}>{weight} kg</option>
-                            ))}
-                        </select>
+                        />
                     </div>
-                    <div className="col-span-4 md:col-span-2">
-                        <label htmlFor="weight" className="block text-sm font-medium text-white mb-2">Weight goal</label>
-                        <select
+                    <div className="col-span-4 md:col-span-1">
+                        <Label htmlFor="weightGoal" >Desired weight (kg)</Label>
+                        <Input
                             name="weightGoal"
+                            type="number"
                             value={formData.weightGoal}
                             onChange={handleChange}
-                            className="w-full p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
+                            required
+                            disabled={generateAiAnswer.isPending}
+                        />
+                    </div>
+                    {trainers.isSuccess && 
+                    <div className="col-span-4 md:col-span-2">
+                        <Label htmlFor="trainerId">Choose a Trainer</Label>
+                        <select
+                            name="trainerId"
+                            value={formData.trainerId}
+                            onChange={handleChange}
                             required
                             disabled={generateAiAnswer.isPending}
                         >
-                            <option value="" disabled>Select your desired weight</option>
-                            {Array.from({ length: 66 }, (_, i) => i + 45).map((weight) => (
-                                <option key={weight} value={weight}>{weight} kg</option>
+                            <option value="">Pick one</option>
+                            {Object.values(trainers.data.data.success).map((trainer) => (
+                                <option key={trainer.id} value={trainer.id}>
+                                    {trainer.firstName} {trainer.lastName} - {trainer.clients.length} Active clients
+                                </option>
                             ))}
                         </select>
                     </div>
-                    {trainers.isSuccess && 
-                        <div className="col-span-4 md:col-span-2">
-                            <label htmlFor="trainer" className="block text-sm font-medium  text-white mb-2">
-                                Choose a Trainer
-                            </label>
-                            <select
-                                name="trainerId"
-                                value={formData.trainerId}
-                                onChange={handleChange}
-                                className="w-full flex p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white"
-                                required
-                                disabled={generateAiAnswer.isPending}
-                            >
-                                <option value="">Choose your trainer</option>
-                                {Object.values(trainers.data.data.success).map((trainer) => (
-                                    <option key={trainer.id} value={trainer.id }>
-                                        <p className="">{trainer.firstName} {trainer.lastName}<span> <p className="ml-auto">{trainer.clients.length} <span>Active clients</span></p></span></p>
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        }
+                    }
                     <div className="col-span-4 ">
-                        <label htmlFor="description" className="block text-white">Description</label>
-                        <textarea
+                        <Label htmlFor="description">Description</Label>
+                        <Textarea
                             name="description"
                             placeholder="Write a short description of what you would like to achieve..."
                             value={formData.description}
                             onChange={handleChange}
                             required
                             disabled={generateAiAnswer.isPending}
-                            className="w-full h-24 p-2 border-2 border-gray-300 rounded-lg bg-slate-800 text-white resize-none"
                             rows="4"
-                        ></textarea>
-                    </div></>
+                        ></Textarea>
+                    </div>
+                    </>
                     }
                     <SubmitButton apiInfo={generateAiAnswer} />
-                    
                 </form>
             </div>
         </div>

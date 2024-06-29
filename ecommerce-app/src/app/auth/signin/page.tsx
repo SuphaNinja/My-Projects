@@ -1,9 +1,10 @@
 "use client"
-import { Button, Link } from "@nextui-org/react";
+import { Button } from "@/components/ui/button";
 import SignInForm from "./SignInForm";
-import { useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "react-toastify";
+import Link from "next/link";
+import NavBar from "@/app/MainComponents/navbar/NavBar";
 
 interface Props {
     searchParams: {
@@ -14,18 +15,28 @@ interface Props {
 const SignInPage = ({ searchParams }: Props) => {
     const { data, status } = useSession();
     if (status === "authenticated") {
-        toast.success("Sign in succesfull! Redirecting...");
+        if(!toast.isActive("loginMessage")) {
+            toast.success("Sign in succesfull! Redirecting...", {
+                toastId: "loginMessage"
+            });
+        }
         window.location.href = searchParams.callbackUrl || "/";
-
-    }
+    };
 
     return (
-        <div className="flex items-center justify-center flex-col">
-            <p className="mx-auto my-4"> Dont have an account yet?
-                <Link className="text-xl ml-2 font-semibold hover:underline" as={Link} href="/auth/signup">Sign up</Link>
-            </p>
-            <SignInForm callbackUrl={searchParams.callbackUrl} />
-            <Link href="/auth/forgotPass">Forgot Your Password?</Link>
+        <div>
+            <NavBar/>
+            <div className="flex h-screen items-center md:mt-24 flex-col">
+                <p className="text-center "> Dont have an account yet?
+                    <Button asChild variant="link">
+                        <Link href="/auth/signup">Sign up</Link>
+                    </Button>
+                </p>
+                <SignInForm callbackUrl={searchParams.callbackUrl} />
+                <Button asChild variant="link">
+                    <Link href="/auth/forgotPass">Forgot Your Password?</Link>
+                </Button>
+            </div>
         </div>
     );
 };

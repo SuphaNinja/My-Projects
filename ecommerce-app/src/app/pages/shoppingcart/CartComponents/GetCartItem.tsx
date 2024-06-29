@@ -1,20 +1,15 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { HeartIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 
 export default function GetCartItem({ itemId, quantity }: any) {
-
-
-    const [lastSuccessTime, setLastSuccessTime] = useState(0);
-
-    const queryClient = useQueryClient();
-
     const [newQuantity, setNewQuantity] = useState(quantity);
-
     const [ itemIsInWishlist, setItemIsInWishlist ] = useState(false);
 
     const product = useQuery({
@@ -32,99 +27,113 @@ export default function GetCartItem({ itemId, quantity }: any) {
         productId: itemId as string,
         quantity: 1,
         price: product.data?.price
-    }
+    };
 
     const addToWishlist = useMutation({
         mutationFn: () => api.addToWishlist(wishListData),
-        onSuccess: () => {
-            toast.success("Updated wishlist successfully");
-            user.refetch(); // Invalidate user query
-        },
     });
 
+    const handleAddToWishlist = () => {
+        addToWishlist.mutate();
+        if (itemIsInWishlist === false) {
+            if (!toast.isActive(itemId)) {
+                toast.success("Product added to wishlist!", { toastId: itemId })
+            };
+        } else {
+            if (!toast.isActive(itemId)) {
+                toast.success("Product removed to wishlist!", { toastId: itemId })
+            };
+        };
+        setItemIsInWishlist(!itemIsInWishlist);
+    };
 
     const deleteCartItem = useMutation({
-        mutationFn: () => api.deleteCartItem(itemId.toString()),
-        onSuccess: () => {
-            queryClient.invalidateQueries();
-            toast.success("Item removed from cart");
-        }
+        mutationFn: () => api.deleteCartItem(itemId.toString())
     });
+
+    const handleDeleteCartItem = () => {
+        deleteCartItem.mutate();
+        setTimeout(() => {
+            user.refetch();
+        }, 50);
+        if (!toast.isActive(itemId)) {
+            toast.success("Item has been deleted from cart!", {
+                toastId: itemId
+            });
+        };
+    };
+
     const productData = {
         productId: itemId as string,
         quantity: newQuantity,
         price: product.data?.price
-    }
+    };
+    
+    const addToCart = useMutation({
+        mutationFn: () => api.addToCart(productData), 
+    });
 
     const updateQuantity = (e: any) => {
         const value = parseInt(e.target.value, 10);
-        if (!isNaN(value) && value < 1) { // Check if it's a valid number
-            setNewQuantity(1); // Update state with the entered value if >= 0
+        if (!isNaN(value) && value < 1) {
+            setNewQuantity(1); 
             toast.error("Cannot add less than 1 quantity to cart")
-            handleAddToCart.mutate();
+            addToCart.mutate();
         } else {
-            setNewQuantity(value); // Update state with the entered value if >= 0
-            handleAddToCart.mutate();
+            setNewQuantity(value); 
+            addToCart.mutate();
         }
-    }
+    };
 
-    const handleAddToCart = useMutation({
-        mutationFn: () => api.addToCart(productData),
-        onSuccess: () => {
-            const currentTime = new Date().getTime();
-            if (!lastSuccessTime || (currentTime - lastSuccessTime) > 5000) {
-                // If more than 5 seconds have passed since the last success, show toast
-                toast.success(`Updated cart successfully`);
-                setLastSuccessTime(currentTime);
-            }
-        }
-    });
-
-    const checkWishList = (productId:number) => {
-        if (user.data && user.data.wishLists) {
-            const foundItem = user.data?.wishLists.find((item: any) => item.productId == productId);
-
-            if (foundItem !== undefined && foundItem !== null ) {
-                setItemIsInWishlist(true)
-            } else {
-                setItemIsInWishlist(false)
-            }    
+    const checkWishList = (productId: string) => {
+        if (user.data && productId) {
+            const itemExists = user.data.wishLists.some((item: any) => {
+                return item.productId === productId.toString();
+            });
+            setItemIsInWishlist(itemExists);
         } else {
-            console.log("error with setting itemIsInWishlist", itemIsInWishlist)
-        }
-    }
+            setItemIsInWishlist(false);
+        };
+    };
+
    useEffect(() => {
-        checkWishList(product.data?.id as number)
-   },[user]);
-
+       checkWishList(itemId as string);
+   },[]);
 
     return (
-        <div>
+        <div className="w-full">
             {!product.isLoading && (
-                <div className="grid max-h-[300px] w-full grid-cols-6 p-8 gap-4">
+                <div className="md:grid flex flex-col md:max-h-[300px] w-full grid-cols-6 p-8 gap-4">
                     <div className="h-full col-span-1">
-                        <img src={product.data?.thumbnail} alt="product image" className="w-24 h-24 rounded-md object-cover" />
+                        <img src={product.data?.thumbnail} alt="product image" className="w-full md:size-24 rounded-md object-cover" />
                     </div>
                     <div className="h-full flex flex-col justify-between col-span-4">
                         <h3 className="text-xl font-bold">{product.data?.brand}</h3>
                         <p className="text-xl font-semibold">{product.data?.title}</p>
                         <button
-                            onClick={() => addToWishlist.mutate()}>
+                            onClick={handleAddToWishlist}>
                             {itemIsInWishlist ? <HeartIcon color="red" fill="red" width={30} /> : <HeartIcon width={30} />}
                         </button>
                     </div>
-                    <div className="h-full flex flex-col justify-between items-center col-span-1">
-                        <p className="font-semibold ">
-                            <span className="text-nowrap">Total Price:</span> {Math.round((product.data?.price - (product.data?.price * (product.data?.discountPercentage / 100))) * newQuantity)}$ 
-                            <span className="text-tiny text-red-500 line-through">{product.data?.price * newQuantity}</span>
-                        </p>
-                        <input
+                    <div className="h-full flex flex-col col-span-1">
+                        <div className="font-semibold flex flex-col gap-1">
+                            <p>Total Price:</p>
+                            <p>{Math.round((product.data?.price - (product.data?.price * (product.data?.discountPercentage / 100))) * newQuantity)}$
+                                <span className="text-tiny text-red-500 ml-2 line-through">{Math.round(product.data?.price * newQuantity)}</span>
+                            </p> 
+                        </div>
+                        <Input
                             type="number"
                             onChange={(e) => updateQuantity(e)}
                             value={newQuantity}
-                            className="w-2/3 no-scrollbar border-2 border-slate-300 rounded-md"
                         />  
-                        <button onClick={() => deleteCartItem.mutate(itemId)} className="rounded-md font-bold py-1 px-2 hover:text-red-500 transition-all w-full hover:underline bg-slate-300">Remove</button>
+                        <Button 
+                            variant="destructive" 
+                            className="mt-2" 
+                            onClick={handleDeleteCartItem}
+                            >
+                            Remove
+                        </Button>
                     </div>
                 </div>
             )}

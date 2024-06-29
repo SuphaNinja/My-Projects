@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 
 
-export default function Notifications({currentUser}) {
+export default function Notifications({ currentUser }) {
 
     const queryClient = useQueryClient();
 
@@ -42,7 +42,7 @@ export default function Notifications({currentUser}) {
 
 
     const readNotification = useMutation({
-        mutationFn: (notificationId) => axiosInstance.post("update-notification", {notificationId})
+        mutationFn: (notificationId) => axiosInstance.post("update-notification", { notificationId })
     });
 
     const handleRead = (notificationId) => {
@@ -57,12 +57,12 @@ export default function Notifications({currentUser}) {
 
     return (
         <div className="max-h-[250px] flex flex-col gap-2">
-            {currentUser.notifications.map((notification, index ) => (
+            {currentUser.notifications.map((notification, index) => (
                 <div key={index} className="py-2 px-4 bg-slate-800/50 rounded-md">
                     <div className="flex gap-2 items-center">
-                        {notification.read ? 
+                        {notification.read ?
                             <p><EyeIcon width={20} /></p>
-                        :
+                            :
                             <button onClick={() => handleRead(notification.id)}><EyeSlashIcon width={20} /> </button>
                         }
                         <p className="first-letter:uppercase">{notification.message}!</p>

@@ -6,21 +6,15 @@ import InfoCard from "./aboutComponents/InfoCard";
 import { ArrowsRightLeftIcon, BriefcaseIcon, CakeIcon, CalendarDaysIcon, ComputerDesktopIcon, CurrencyDollarIcon, DevicePhoneMobileIcon, GlobeAltIcon, HandThumbUpIcon, KeyIcon, LanguageIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PhoneArrowDownLeftIcon, RectangleGroupIcon, ShieldCheckIcon, TruckIcon, WalletIcon, WifiIcon } from "@heroicons/react/24/outline";
 import { BanknotesIcon } from "@heroicons/react/16/solid";
 
-
-
 export default function Page() {
 
-
-
-
-
     return (
-        <div className="w-full bg-slate-100">
+        <div className="max-w-screen">
             <NavBar />
-            <div className="bg-neutral-100 w-full">
+            <div className="w-auto">
                 <TopBanner />
             </div>
-            <div className="md:w-3/3 h-[20rem] w-full mx-auto justify-between flex py-6">
+            <div className="md:w-3/3 h-[20rem] w-full mx-auto items-center justify-between flex flex-wrap md:flex-row py-6">
                 <FlagWithText
                     countryCode="US"
                     title="United States"
@@ -47,12 +41,12 @@ export default function Page() {
                     text="Experience the perfect mix of tradition and modernity with our Japanese store. From stunning handiwork to advanced tech, ElectroBuy's Japan store brings you the essence of Japanese culture and ingenuity delivered to your doorstep."
                 />
             </div>
-            <hr className="md:w-2/3 w-full mx-auto" />
-            <div className="md:w-3/3 flex-col w-full mx-auto mt-12 flex gap-12">
-                <div className="flex gap-12">
+            <hr className="md:w-2/3 w-auto mx-auto" />
+            <div className="md:w-full flex-col w-full mx-auto mt-12 flex gap-12">
+                <div className="flex md:flex-row  flex-col items-center gap-12">
                     <div className="flex flex-col">
-                        <h2 className="text-3xl text-center mb-12">Who We Are</h2>
-                        <p className="w-2/3 mx-auto text-lg text-pretty ">
+                        <h2 className="text-3xl text-center mb-4 md:mb-12">Who We Are</h2>
+                        <p className="md:w-2/3 text-center md:text-left mx-auto text-lg text-pretty ">
                             We are your global shopping companions and have been so since our inception in 2012. Today, we've become a cross-border shopping paradise connecting customers in over 180 countries with limitless possibilities. We operate online stores in 180+ countries with products from the US, the UK, China, Japan, Hong Kong, Korea, and Turkey. Some of our primary features include:
                         </p>
                     </div>
@@ -68,7 +62,7 @@ export default function Page() {
                             text="We make your shopping experience convenient and secure with global payment methods like Stripe, Knet, and Paypal, along with local methods depending on your region."
                         />
                     </div>
-                    <div className="flex flex-col mt-24 gap-8">
+                    <div className="flex flex-col md:mt-24 gap-8">
                         <InfoCard
                             icon={<RectangleGroupIcon width={50} />}
                             title="Wide Product Range"
@@ -81,11 +75,11 @@ export default function Page() {
                         />
                     </div>
                 </div>
-                <div className="grid grid-cols-3 mt-8">
-                    <div className="col-span-3 grid grid-cols-3">
+                <div className="grid grid-cols-3 md:ml-12 mt-8">
+                    <div className="col-span-3 flex flex-col items-center gap-4 md:grid md:grid-cols-3">
                         <div className="col-span-1 mt-2">
-                            <h2 className="text-3xl font-semibold">How We Work</h2>
-                            <p className="mt-4 text-xl md:mr-12">At ElectroBuy, simplicity is our forte. We have a straightforward approach to sweeten your shopping experience.</p>
+                            <h2 className="text-3xl text-center md:text-left font-semibold">How We Work</h2>
+                            <p className="mt-4 text-xl text-center md:text-left md:mr-12">At ElectroBuy, simplicity is our forte. We have a straightforward approach to sweeten your shopping experience.</p>
                         </div>
                         <div className="col-span-1">
                             <InfoCard
@@ -103,7 +97,7 @@ export default function Page() {
                         </div>
                     </div>
                     <div className="col-span-3 grid grid-cols-3  mt-6">
-                        <div className="col-span-3 grid grid-cols-3">
+                        <div className="col-span-3 flex flex-col items-center gap-6 md:grid md:grid-cols-3">
                             <div className="col-span-1">
                                 <InfoCard
                                     icon={<RectangleGroupIcon width={50} />}
@@ -129,12 +123,12 @@ export default function Page() {
                     </div>
                 </div>
                 <div className="grid grid-cols-3 mt-12">
-                    <div className="col-span-3 grid grid-cols-3">
+                    <div className="col-span-3 flex flex-col items-center gap-6 md:grid md:grid-cols-3">
                         <div className="col-span-1 mt-6">
-                            <h1 className="text-4xl font-semibold mb-4">Why Our Customers Trust Us</h1>
-                            <p className="text-xl text-pretty">There are hundreds of reasons why our customers love and trust us. Some of the reasons why are:</p>
+                            <h1 className="text-4xl text-center md:text-left md:font-semibold mb-4">Why Our Customers Trust Us</h1>
+                            <p className="text-xl text-center md:text-left text-pretty">There are hundreds of reasons why our customers love and trust us. Some of the reasons why are:</p>
                         </div>
-                        <div className="col-span-1 mt-24">
+                        <div className="col-span-1 md:mt-24">
                             <InfoCard
                                 icon={<HandThumbUpIcon width={50} />}
                                 title="Genuine Products"
@@ -149,8 +143,8 @@ export default function Page() {
                             />
                         </div>
                     </div>
-                    <div className="col-span-3 grid grid-cols-3 mt-12">
-                        <div className="col-span-1 -mt-44">
+                    <div className="col-span-3 flex flex-col items-center gap-6 md:grid md:grid-cols-3 mt-12">
+                        <div className="col-span-1 md:-mt-44">
                             <InfoCard
                                 icon={<ArrowsRightLeftIcon width={50} />}
                                 title="Top Logistics Partners"
@@ -164,60 +158,60 @@ export default function Page() {
                                 text="Transparency creates trust, and at ElectroBuy, we prioritise clear communication and reliable service. Whether tracking your order, understanding product details, or resolving an issue, we provide you with the support you need for a transparent and trustworthy shopping experience."
                             />
                         </div>
-                        <div className="col-span-1">
-                            <img className="rounded-xl" src="https://media.istockphoto.com/id/1419539600/photo/business-presentation-and-man-on-a-laptop-in-a-corporate-conference-or-office-collaboration.jpg?s=612x612&w=0&k=20&c=viDl-Gtp68kqaCeh0WbnqM0EERvGec4i5C_Vk84VHKE=" />
+                        <div className="col-span-1 mx-auto">
+                            <img className="md:rounded-xl" src="https://media.istockphoto.com/id/1419539600/photo/business-presentation-and-man-on-a-laptop-in-a-corporate-conference-or-office-collaboration.jpg?s=612x612&w=0&k=20&c=viDl-Gtp68kqaCeh0WbnqM0EERvGec4i5C_Vk84VHKE=" />
                         </div>
                     </div>
                 </div>
                 <div className="mt-12">
-                    <h2 className="text-4xl font-semibold mb-6">What We Deliver</h2>
-                    <p className="text-xl">Our shelves are stocked with products that bring joy and utility to your life. From the latest tech gadgets to trendy fashion pieces, beauty essentials, and much more, Ubuy brings you a world of quality and variety. Our categories include:</p>
+                    <h2 className="text-4xl text-center font-semibold mb-6">What We Deliver</h2>
+                    <p className="text-xl text-center">Our shelves are stocked with products that bring joy and utility to your life. From the latest tech gadgets to trendy fashion pieces, beauty essentials, and much more, Ubuy brings you a world of quality and variety. Our categories include:</p>
                 </div>
-                <div className="flex flex-col gap-6 w-1/2">
-                    <div className="flex justify-between gap-4">
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                <div className="flex md:flex-col gap-6">
+                    <div className="md:flex justify-center gap-16">
+                        <div className="flex gap-2">
                             <BriefcaseIcon width={30} />
                             <p className="text-xl">Clothing</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex gap-2 ">
                             <WalletIcon width={30} />
                             <p className="text-xl">Jewelery</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex gap-2 ">
                             <BanknotesIcon width={30} />
                             <p className="text-xl">Designer</p>
                         </div>
                     </div>
-                    <div className="flex justify-between gap-4">
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                    <div className="md:flex justify-center gap-16">
+                        <div className="flex gap-2">
                             <WifiIcon width={30} />
                             <p className="text-xl">Mobile Services</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex gap-2">
                             <DevicePhoneMobileIcon width={30} />
                             <p className="text-xl">Electronics</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex gap-2">
                             <KeyIcon width={30} />
                             <p className="text-xl">Accessories</p>
                         </div>
                     </div>
-                    <div className="flex justify-between gap-4">
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                    <div className="md:flex justify-center gap-16">
+                        <div className="flex gap-2 rounded-lg">
                             <CakeIcon width={30} />
                             <p className="text-xl">Food</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex  gap-2 rounded-lg">
                             <PaperAirplaneIcon width={30} />
                             <p className="text-xl">Recipies</p>
                         </div>
-                        <div className="flex bg-white py-2 px-4 gap-2 rounded-lg">
+                        <div className="flex  gap-2 ">
                             <CalendarDaysIcon width={30} />
                             <p className="text-xl">Coaching</p>
                         </div>
                     </div>
                 </div>
-                <p className="text-xl text-center mt-6 font-semibold">Join us on this journey to explore the world with Ubuy, and let us deliver happiness to your doorstep.</p>
+                <p className="text-xl text-center my-6 font-semibold">Join us on this journey to explore the world with Ubuy, and let us deliver happiness to your doorstep.</p>
             </div>
             <Footer />
         </div>

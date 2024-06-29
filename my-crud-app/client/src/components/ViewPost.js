@@ -6,16 +6,20 @@ import { Link } from "react-router-dom";
 
 import { useEffect, useState } from "react";
 import Comment from "./Comment";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Skeleton } from "./ui/skeleton";
 
 export default function ViewPost({ postId, setIsVeiwingComments, isViewingComments }) {
-    
+
 
     const queryClient = useQueryClient();
 
     const post = useQuery({
         queryKey: ["post", postId],
         queryFn: () => axiosInstance.post("/get-post", { postId }),
-        enabled: !!postId, // Only enable the query if postId is defined
+        enabled: !!postId, 
     });
 
     const [commentData, setCommentData] = useState({
@@ -34,16 +38,18 @@ export default function ViewPost({ postId, setIsVeiwingComments, isViewingCommen
                 "x-access-token": localStorage.getItem("token")
             }
         }),
-        onSuccess: () =>{ 
-            queryClient.invalidateQueries(["post"])
-            toast("Comment added Successfully!")
-            setCommentData({
-                comment: "",
-                postId: postId
-            });
+        onSuccess: (data) => {
+            if(data?.data?.success) {
+                queryClient.invalidateQueries(["post"])
+                toast.success("Comment added Successfully!")
+                 setCommentData({
+                    comment: "",
+                    postId: postId
+                });
+            }
         }
-       
-    });
+
+    }); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -59,10 +65,20 @@ export default function ViewPost({ postId, setIsVeiwingComments, isViewingCommen
             comment: "",
             postId: postId
         });
-    },[postId])
+    }, [postId])
 
-    
-  
+    if (post.isLoading) {
+        return (
+            <div className="flex items-center space-x-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-[250px]" />
+                    <Skeleton className="h-4 w-[200px]" />
+                </div>
+            </div>
+        )
+    }
+
 
     if (!postId) {
         return null
@@ -74,45 +90,53 @@ export default function ViewPost({ postId, setIsVeiwingComments, isViewingCommen
                     <div className="flex justify-between mx-6">
                         <p className="md:text-xl text-sm font-semibold text-center underline">
                             Comments
-                            <span className="ml-2">({post.data?.data?.post.comments.length})</span>
+                            <span className="ml-2">({post.data?.data?.post?.comments.length})</span>
                         </p>
                         <button className="hover:underline" onClick={() => setIsVeiwingComments(!isViewingComments)}>Close</button>
                     </div>
-                    <div className="overflow-y-auto no-scrollbar my-2 md:border-y-4 h-4/6">
-                        <div className="flex flex-col ">
+                    <div className="overflow-y-auto no-scrollbar mt-2 h-4/6">
+                        <div className="flex flex-col gap-2">
                             {post.data?.data?.post.comments.length > 0 && post.data?.data?.post.comments.map((comment, index) => (
-                                <div key={index}>
-                                    <Comment comment={comment}/>
+                                <div key={index} className="border-y-2 py-2">
+                                    <Comment comment={comment} />
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div className="flex flex-col md:mt-4 md:border-none border-2 px-4">
-                        {user?.data?.data?.error ?
+                    <div className="flex flex-col my-auto  px-4">
+                        {!user.data?.data ?
                             <div className="flex items-center justify-center gap-2">
-                                <Link className="font-semibold hover:underline" to="/login">Login</Link>
+                                <Button asChild >
+                                    <Link to="/login">Login</Link>
+                                </Button>
                                 <p>or</p>
-                                <Link className="font-semibold hover:underline" to="/signup">Sign up</Link>
+                                <Button asChild>
+                                    <Link to="/signup">Sign up</Link>
+                                </Button>
                                 <p>to comment!</p>
                             </div>
-                            : 
+                            :
                             <div className="flex flex-col">
-                                <p className="text-lg font-semibold ml-2">Write a comment</p>
-                                <input
+                                <Label htmlFor="comment" className="mb-2">Write a comment</Label>
+                                <Input
                                     name="comment"
                                     value={commentData.comment}
                                     onChange={handleChange}
-                                    className="w-full rounded-xl bg-default border-2 border-slate-400 "
                                 />
-                                <button
-                                    onClick={commentOnPost.mutate} className="text-center bg-important rounded-md md:rounded-xl py-1 md:py-2 md:mt-2 text-white w-full md:w-1/2 mx-auto hover:underline">
+                                <Button
+                                    onClick={commentOnPost.mutate} 
+                                    className=" mt-2"   
+                                    size="sm"
+                                >
                                     Comment!
-                                </button>
+                                </Button>
                             </div>
+                           
                         }
-                    </div>
+                        {commentOnPost.data?.data?.error && <p className="text-center bg-red-500 font-semibold mt-1">{commentOnPost.data.data.error}</p>}
+                    </div> 
                 </div>
-                
+
             </div>
         )
     }

@@ -1,18 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
 import axiosInstance from "../lib/axiosInstance";
-import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToggleTheme } from "./ui/ToggleTheme";
+import { Button } from "./ui/button";
 
 
 
 export default function NavBar() {
-
-    const token = localStorage.getItem("token");
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const navigate = useNavigate();
+    const token = localStorage.getItem("token");
 
     const logout = () => {
         localStorage.removeItem("token");
@@ -25,13 +25,14 @@ export default function NavBar() {
         queryFn: () => axiosInstance.get("/get-current-user")
     });
     const user = fetchedUser?.data?.data?.success;
+
     return (
-        <div className="md:w-full z-50 fixed md:static w-full shadow-lg bg-gradient-to-b from-slate-600 to-slate-400 px-6 py-4">
+        <div className="z-50 top-0 fixed md:static w-full bg-primary px-6 py-4">
             <div className="flex relative items-center justify-between">
-                <div className="w-1/3 md:hidden">
+                <div className="w-1/3 md:hidden ">
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         <svg
-                            className="w-6 h-6"
+                            className="w-6 h-6 dark:text-black text-white"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -45,46 +46,45 @@ export default function NavBar() {
                             ></path>
                         </svg>
                     </button>
-                </div>  
-                <div className="w-2/3 md:w-1/3 flex justify-center md:justify-start">
-                    <Link to="/" className="flex items-center space-x-2 text-4xl font-bold tracking-wide text-gray-900 hover:text-blue-600 transition-colors duration-300 ease-in-out">
+                </div>
+                <div className="w-1/3 flex justify-center md:justify-start">
+                    <Link to="/" className="flex items-center space-x-2 md:text-4xl text-2xl font-bold tracking-wide dark:hover:text-blue-600 dark:text-black text-white hover:text-blue-600 transition-colors duration-300 ease-in-out">
                         <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <span>GoalFitPro</span>
                     </Link>
                 </div>
-                <div className=" hidden md:flex gap-4 justify-end ">
-                    {token ? (
-                        <>
-                            {user?.guides?.length > 0 && 
-                                <Link to="/myjourney" className="text-lg font-semibold hover:underline transition-all">My journey</Link>
+                <div className="w-1/3 hidden md:flex gap-4 justify-end">
+                    {user ? (
+                        <>  
+                            <Button asChild>
+                                    <Link to="/shop" className="hover:underline transition-all">Shop</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link to="/newclient" className="hover:underline transition-all">Create guide</Link>
+                            </Button>
+                            {user?.guides?.length > 0 &&
+                            <Button asChild>
+                                <Link to="/myjourney" className="hover:underline transition-all">My journey</Link>
+                            </Button>
+                            } 
+                           {user?.role === "TRAINER" &&
+                            <Button asChild>
+                                <Link to="/myclients" className="hover:underline transition-all">My Clients</Link>
+                            </Button>
                             }
-                            {user?.role === "ADMIN" ? (
-                                <div className="flex gap-2 items-center">
-                                    <p className="text-xs font-bold">ADMIN</p>
-                                    
-                                </div>
-                            ): (user?.role === "TRAINER" && 
-                                <div className="flex gap-2 items-center">
-                                    <p className="text-xs font-bold">TRAINER</p>
-                                    <Link to="/myclients" className="text-lg text-nowrap font-semibold hover:underline transition-all">My Clients</Link>    
-                                </div>
-                            )}
-                            <Link to="/shop" className="text-lg text-nowrap font-semibold hover:underline transition-all">Shop</Link>
-                            <Link to="/newclient" className="text-lg text-nowrap font-semibold hover:underline transition-all">Create guide</Link>
-                            <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
-                            <div className="flex">
-                                <Link to="/shoppingcart">
+                            <Button asChild>
+                                <Link to="/shoppingcart" className="flex my-auto" >
                                     <svg
+                                        className="w-5 h-5  "
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="h-6 w-6"
                                         fill="none"
                                         viewBox="0 0 24 24"
-                                        stroke="currentColor"   
+                                        stroke="currentColor"
                                     >
                                         <path
-                                            stroke-linecap="round"
+                                                stroke-linecap="round"
                                             stroke-linejoin="round"
                                             stroke-width="2"
                                             d="M3 4h2l2.68 9.92A2 2 0 0 0 9.62 16h4.76a2 2 0 0 0 1.94-1.08L19 6h-3"
@@ -92,45 +92,52 @@ export default function NavBar() {
                                         <circle cx="9" cy="19" r="2"></circle>
                                         <circle cx="17" cy="19" r="2"></circle>
                                     </svg>
+                                    {user?.cart?.cartItems?.length > 0 &&
+                                        <p className="text-xs ">({user?.cart?.cartItems?.length})</p>
+                                    }
                                 </Link>
-                                {user?.cart?.cartItems?.length > 0 &&
-                                    <p>({user?.cart?.cartItems?.length})</p>
-                                }
-                            </div>
+                            </Button>
+                            <Button onClick={logout} className="hover:underline transition-all">Log out</Button>
+                            <ToggleTheme />
                         </>
                     ) : (
                         <>
-                            <Link to="/signup" className="text-lg text-nowrap font-semibold hover:underline transition-all">Sign Up</Link>
-                            <Link to="/login" className="text-lg text-nowrap font-semibold hover:underline transition-all">Login</Link>
+                            <Button asChild>
+                                <Link to="/signup" className="hover:underline transition-all">Sign Up</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link to="/login" className="hover:underline transition-all">Login</Link>
+                            </Button>
+                            <ToggleTheme />
                         </>
                     )}
                 </div>
             </div>
             {isMenuOpen && (
                 <div className="mt-4 md:hidden">
-                    {token ? (
+                    {user ? (
                         <>
-                        <div className="flex flex-col gap-2 items-center">
-                            {user?.role === "ADMIN" ? (
-                                <div>
-                                    <p className="text-xs font-bold">ADMIN</p>
-                                </div>
-                            ) : (user?.role === "TRAINER" && 
-                                <div className="flex gap-2 items-center">
-                                    <p className="text-xs font-bold">TRAINER</p>
-                                    <Link to="/myclients" className="text-lg text-nowrap font-semibold hover:underline transition-all">My Clients</Link>
-                                </div>
-                            )}
-                                <Link to="/newclient" className="text-lg text-nowrap font-semibold hover:underline transition-all">Create guide</Link>
-                                {user?.guides?.length > 0 &&
-                                    <Link to="/myjourney" className="text-lg font-semibold hover:underline transition-all">My journey</Link>
-                                }  
-                            </div>
-                            <div className="flex">
-                                <Link to="/shoppingcart">
+                            <Button asChild>
+                                <Link to="/shop" className="hover:underline transition-all">Shop</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link to="/newclient" className="hover:underline transition-all">Create guide</Link>
+                            </Button>
+                            {user?.guides?.length > 0 &&
+                                <Button asChild>
+                                    <Link to="/myjourney" className="hover:underline transition-all">My journey</Link>
+                                </Button>
+                            }
+                            {user?.role === "TRAINER" &&
+                                <Button asChild>
+                                    <Link to="/myclients" className="hover:underline transition-all">My Clients</Link>
+                                </Button>
+                            }
+                            <Button asChild>
+                                <Link to="/shoppingcart" className="flex my-auto" >
                                     <svg
+                                        className="w-5 h-5  "
                                         xmlns="http://www.w3.org/2000/svg"
-                                        class="h-6 w-6"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
@@ -144,17 +151,23 @@ export default function NavBar() {
                                         <circle cx="9" cy="19" r="2"></circle>
                                         <circle cx="17" cy="19" r="2"></circle>
                                     </svg>
+                                    {user?.cart?.cartItems?.length > 0 &&
+                                        <p className="text-xs ">({user?.cart?.cartItems?.length})</p>
+                                    }
                                 </Link>
-                                {user?.cart?.cartItems?.length > 0 &&
-                                    <p>({user?.cart?.cartItems?.length})</p>
-                                }
-                            </div>
-                            <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
+                            </Button>
+                            <Button onClick={logout} className="ml-24">Log out</Button>
+                            <ToggleTheme />
                         </>
                     ) : (
                         <>
-                            <Link to="/signup" className="text-lg font-semibold hover:underline transition-all block">Sign Up</Link>
-                            <Link to="/login" className="text-lg font-semibold hover:underline transition-all block">Login</Link>
+                            <Button asChild>
+                                <Link to="/signup" className="hover:underline transition-all">Sign Up</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link to="/login" className="hover:underline transition-all">Login</Link>
+                            </Button>
+                            <ToggleTheme />
                         </>
                     )}
                 </div>

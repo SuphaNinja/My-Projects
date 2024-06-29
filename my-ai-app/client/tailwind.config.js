@@ -1,85 +1,86 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: ["class"],
   content: [
-    "./src/**/*.{js,jsx,ts,tsx}",
+    './pages/**/*.{js,jsx}',
+    './components/**/*.{js,jsx}',
+    './app/**/*.{js,jsx}',
+    './src/**/*.{js,jsx}',
   ],
+  prefix: "",
   theme: {
-
-    extend: {
-      writingMode: {
-        'vertical-rl': 'vertical-rl',
-      },
-      textOrientation: {
-        'mixed': 'mixed',
-      },
-      colors: {
-        default: "#F6F4E8",
-        primary: "#BACEC1",
-        secondary: "#E59560",
-        important: "#1D3124",
-        white: "#ffffff"
-      },
-      scrollSnapType: {
-        y: 'y proximity',
-      },
-      scrollSnapAlign: {
-        start: 'start',
-      },
-      scrollBehavior: {
-        smooth: 'smooth',
-      },
-      scrollMargin: {
-        top: '5px', // Adjust this value as needed for smoother effect
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
       },
     },
-  },
-  variants: {
     extend: {
-      overflow: ['responsive'], // If you want responsive overflow classes
-      scrollSnapType: ['responsive'],
-      scrollSnapAlign: ['responsive'],
+      colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
     },
   },
   plugins: [
-    // Custom plugin to handle no-scrollbar
-    function ({ addUtilities }) {
-      addUtilities({
-        '.no-scrollbar::-webkit-scrollbar': {
-          display: 'none',
-        },
-        '.no-scrollbar': {
-          '-ms-overflow-style': 'none', /* IE and Edge */
-          'scrollbar-width': 'none', /* Firefox */
-        },
-        '.scroll-snap-x': {
-          scrollSnapType: 'x mandatory',
-        },
-        '.scroll-snap-y': {
-          scrollSnapType: 'y proximity',
-        },
-        '.scroll-snap-start': {
-          scrollSnapAlign: 'start',
-        },
-        '.scroll-snap-center': {
-          scrollSnapAlign: 'center',
-        },
-        '.scroll-snap-end': {
-          scrollSnapAlign: 'end',
-        },
-        '.scroll-smooth': {
-          scrollBehavior: 'smooth',
-        },
-        '.scroll-margin-top': {
-          scrollMarginTop: '5px', /* Adjust as needed */
-        },
-        '.writing-mode-vertical-rl': {
-          writingMode: 'vertical-rl',
-        },
-        '.text-orientation-mixed': {
-          textOrientation: 'mixed',
+    require("tailwindcss-animate"),
+    function ({ addBase }) {
+      addBase({
+        'select': {
+          '@apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50': {},
         },
       });
-    },
+    }
   ],
 }
-

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import ClientDay from "./ClientDay";
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axiosInstance from "../../lib/axiosInstance";
-import { toast } from "react-toastify"
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 export default function ClientGuide(guide) {
     const queryClient = useQueryClient();
@@ -20,15 +21,12 @@ export default function ClientGuide(guide) {
 
     const deleteGuide = useMutation({
         mutationFn: () => axiosInstance.post("/delete-guide", guide.guide),
-        onSuccess: () => {
-            queryClient.invalidateQueries(["currentUser"])
-            toast("Guide has been deleted successfully!")
+        onSuccess: (data) => {
+            queryClient.invalidateQueries(["currentUser"]);
+            if (data.data.succes) {toast(data.data.success) };
+            if (data.data.error) { toast(data.data.error) };
         }
     });
-
-
-  
-
 
     useEffect(() => {
         const today = new Date();
@@ -36,47 +34,33 @@ export default function ClientGuide(guide) {
         setSelectedDay(currentDayIndex -1);
     }, []);
 
-
-    const onChange = (event) => {
+    const handleDayChange = (event) => {
         const value = event.target.value;
         setSelectedDay(value);
     };
 
-    if (!guide) {
-        return (
-            <div>No guide on this account!</div>
-        )
-    } else {
-        return (
-            <div className="flex flex-col h-full">
-                <div className="flex justify-between md:mx-6">
-                    <button
-                        onClick={deleteGuide.mutate}
-                        className="bg-red-500 mt-2 hover:bg-red-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                    >
-                        Delete guide
-                    </button>
-                    <div className="ml-auto mt-4 mr-2">
-                        <select
-                            className="bg-slate-500 text-black rounded-md"
-                            value={selectedDay}
-                            onChange={onChange}
-                        >
-                            <option value="0">-- Select a Day --</option>
-                            {days.map((day, index) => (
-                                <option key={index} value={index}>
-                                    {day}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+    return (
+        <div className="flex flex-col h-full">
+            <div className="flex justify-between md:mx-6 mt-4">
+                <Button variant="destructive" onClick={deleteGuide.mutate} >
+                    Delete guide
+                </Button>
+                <div className="ml-auto mr-2">
+                    <select onChange={handleDayChange}>
+                        {days.map((day, index) => (
+                            <option key={index} value={index}>
+                                {day}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                {selectedDay !== null && (
-                    <div className="h-full ">
-                        <ClientDay days={guide?.guide?.days[selectedDay]} />
-                    </div>
-                )}
             </div>
-        )
-    }
+            {selectedDay !== null && (
+                <div className="h-full">
+                    <ClientDay days={guide?.guide?.days[selectedDay]} />
+                </div>
+            )}
+        </div>
+    )
+    
 }

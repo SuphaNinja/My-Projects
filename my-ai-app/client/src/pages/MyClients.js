@@ -6,13 +6,12 @@ import Client from "../components/MyClientComponents/Client";
 
 export default function MyClients() {
     const [activeComponent, setActiveComponent] = useState("client");
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const fetchTrainer = useQuery({
         queryKey: ["trainer"],
         queryFn: () => axiosInstance.get("/get-current-trainer"),
     });
-
     const trainer = fetchTrainer?.data?.data?.success;
 
     const renderComponent = () => {
@@ -30,9 +29,8 @@ export default function MyClients() {
 
     if (trainer) {
         return (
-            <div className="flex flex-col md:flex-row md:h-[91vh]  ">
-                
-                <div className="md:w-[350px]">
+            <div className="flex flex-col md:flex-row md:h-[92vh]">
+                <div className="md:w-[350px] border-r">
                     <SideBar
                         trainer={trainer}
                         activeComponent={activeComponent}

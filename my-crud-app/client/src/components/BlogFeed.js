@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import axiosInstance from "../lib/axiosInstance";
 import { useState, useRef, useEffect } from "react";
-import { BeakerIcon, HeartIcon } from '@heroicons/react/24/outline' 
+import { BeakerIcon, HeartIcon } from '@heroicons/react/24/outline'
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
+import { debounce } from "lodash";
 
 
 
@@ -11,9 +13,9 @@ import { Link } from "react-router-dom";
 
 export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsVeiwingComments, isViewingComments }) {
 
-
+   
     const queryClient = useQueryClient();
-    
+
     const handleViewPost = () => {
         setClickedPostId(post.id === clickedPostId ? null : post.id);
     };
@@ -22,17 +24,17 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
         mutationFn: () => axiosInstance.post("/like-post", { post }),
         onSuccess: () => {
             queryClient.invalidateQueries(["post"])
-            
+
             if (currentUser.data.data.error) {
                 toast(`${currentUser.data.data.error}`)
             } else {
                 toast(`${isLiked(post, currentUser?.data?.data?.success) ? "Unliked" : "Liked"} post!`)
-            }
+            };
         }
     });
 
     const deletePost = useMutation({
-        mutationFn: (postId) => axiosInstance.post("/delete-post",  {postId} ),
+        mutationFn: (postId) => axiosInstance.post("/delete-post", { postId }),
         onSuccess: () => {
             queryClient.invalidateQueries(["posts"])
 
@@ -52,7 +54,7 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
         queryFn: () => axiosInstance.get("/get-current-user")
     });
 
-    const isLiked= (post, currentUser) => {
+    const isLiked = (post, currentUser) => {
         return post.likes.some(like => like.userId === currentUser?.id);
     };
 
@@ -88,7 +90,7 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
 
     function getThreshold() {
         return window.innerWidth < 768 ? 0.5 : 0.8;
-    }
+    };
 
     const formatDateTime = (isoString) => {
         const date = new Date(isoString);
@@ -126,7 +128,7 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
     const [imageIndex, setImageIndex] = useState(0);
 
     const prevImageIndex = () => {
-        if(imageSrcList.length === 1) {
+        if (imageSrcList.length === 1) {
             return;
         }
         setTransitioning(true);
@@ -155,14 +157,14 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
         }, 500);
     };
 
-    
+
     return (
-        <div ref={blogRef} className="h-full max-h-screen md:max-h-[88vh] border-b-2 border-black md:border-none flex flex-col items-center">
-            <div className={`md:w-5/6 w-full hover:brightness-90 md:border-2 md:rounded-xl md:border-black h-full md:h-[88vh]  md:overflow-hidden md:flex-col bg-primary`}>
-                <div className="relative bg-gradient-to-b from-slate-500 to-slate-200  md:h-3/6 w-full h-7/12">
+        <div ref={blogRef} className="h-full max-h-screen md:max-h-[88vh]  flex flex-col items-center">
+            <div className={`md:w-5/6 w-full hover:brightness-90  md:rounded-xl border-b-2 h-full md:h-[88vh]  md:overflow-hidden md:flex-col`}>
+                <div className="relative md:h-3/6 w-full h-7/12">
                     {imageSrcList.length > 1 &&
-                        <button 
-                            onClick={prevImageIndex} 
+                        <button
+                            onClick={prevImageIndex}
                             className="z-10 h-full w-1/3 hover:bg-slate-500/30 transition-colors absolute top-0 left-0">
                         </button>
                     }
@@ -170,65 +172,68 @@ export default function BlogFeed({ post, setClickedPostId, clickedPostId, setIsV
                         {imageSrcList.length > 1 && imageSrcList.map((image, index) => (
                             <div key={index} className={`flex p-2 border-2  rounded-md ${index === imageIndex ? "border-yellow-500" : "border-slate-400"}`}>
                                 <button onClick={() => setImageIndex(index)}>
-                                    <img src={image} className="min-w-[35px] min-h-[35px] max-w-[35px] max-h-[35px] object-cover" alt="product image" />
+                                    <img src={image} className="w-[35px] h-[35px] object-cover" alt="product image" />
                                 </button>
                             </div>
                         ))}
                     </div>
-                    <img 
-                        src={imageSrcList[imageIndex]} 
-                        className={`w-full md:h-full h-[35vh]  object-cover ${transitioning ? 'transition-opacity duration-500 opacity-0' : ''}`}   
+                    <img
+                        src={imageSrcList[imageIndex]}
+                        className={`w-full md:h-full h-[35vh]  object-cover ${transitioning ? 'transition-opacity duration-500 opacity-0' : ''}`}
                     />
                     {imageSrcList.length > 1 &&
-                        <button 
-                            onClick={nextImageIndex} 
+                        <button
+                            onClick={nextImageIndex}
                             className="z-10 h-full w-1/3 hover:bg-slate-500/30 transition-colors absolute top-0 right-0">
                         </button>
                     }
-                    
+
                 </div>
-                <div className="flex-col -mt-4 md:-mt-2 md:flex bg-default w-full md:h-3/6 pb-2 md:px-2">
-                    <h2 className="text-center border-b-2 pb-2 text font-semibold md:text-xl mt-4 underline">{post.title}</h2> {/* replace with link to postPage */}
-                    <p className="text-pretty px-1 md:px-4 overflow-y-auto max-h-[40vh] text-sm md:font-medium md:mt-4 ">{post.description}</p>
-                    <div className="flex md:mt-auto items-center border-t-2 py-2 justify-between">
-                        <div className="flex text-xs font-semibold text-center flex-col gap-2">
+                <div className="md:flex-col md:flex w-full md:h-3/6 ">
+                    <h2 className="text-center font-semibold md:text-xl underline">{post.title}</h2> 
+                    <p className="px-1 md:px-4 overflow-y-auto max-h-[40vh] text-sm  md:mt-4 ">{post.description}</p>
+                    <div className="flex  items-center  p-2 justify-between">
+                        <div className="flex  text-center flex-col gap-2">
                             <p>Posted by: {post.user.userName}</p>
-                            <p>Posted at: {formatDateTime(post.created_at)}</p>   
-                        </div> 
-                        <button 
+                            <p>Posted at: {formatDateTime(post.created_at)}</p>
+                        </div>
+                        <button
                             className=" font-semibold text-sm md:text-md hover:underline text-center"
                             onClick={() => setIsVeiwingComments(!isViewingComments)}>
-                            {isViewingComments ? "Close comments": "View comments"}
+                            {isViewingComments ? "Close comments" : "View comments"}
                         </button>
-                        {currentUser.isSuccess && 
+                        {currentUser.isSuccess &&
                             <div className="flex items-center gap-2">
                                 <button
-                                    className="flex md:items-center md:justify-center md:ml-6 md:mr-2 md:-mb-2"
+                                    className="flex md:items-center md:justify-center "
                                     onClick={() => likePost.mutate()}>
-                                    {!isLiked(post, currentUser.data.data.success) ? 
-                                        <div className="flex"> <HeartIcon width={35}  />{post.likes.length > 0 ? (post.likes.length) : null}</div>
-                                        : 
+                                    {!isLiked(post, currentUser.data.data.success) ?
+                                        <div className="flex"> <HeartIcon width={35} />{post.likes.length > 0 ? (post.likes.length) : null}</div>
+                                        :
                                         <div className="flex"><HeartIcon color="red" fill="red" width={35} />{post.likes.length > 0 ? (post.likes.length) : null}</div>
                                     }
                                 </button>
-                            {currentUser?.data?.data?.success?.role === "ADMIN" &&
-                                <div className="md:ml-auto flex flex-col gap-2">
-                                    <Link
-                                        to={`/editpost/${post.id}`}
-                                        className="text-center hover:brightness-90 hover:underline text-sm md:text-md text-white md:mr-2 bg-important rounded-xl px-1 py-1 md:px-4" >
-                                        Edit post
-                                    </Link>
-                                    <button
-                                        onClick={() => handleDeletePost(post.id)}
-                                            className="text-center hover:brightness-90 hover:underline text-sm md:text-md text-white md:mr-2 bg-red-500 rounded-xl px-1 py-1 md:px-4" >
-                                        Delete Post
-                                    </button>
-                                </div>
-                            }
+                                {currentUser?.data?.data?.success?.role === "ADMIN" &&
+                                    <div className="md:ml-auto flex flex-col gap-2">
+                                        <Button asChild
+                                            variant="default"
+                                        >
+                                            <Link to={`/editpost/${post.id}`}>
+                                                Edit post
+                                            </Link>
+                                        </Button>
+                                        <Button
+                                            onClick={() => handleDeletePost(post.id)}
+                                            variant="destructive"
+                                            className="" >
+                                            Delete Post
+                                        </Button>
+                                    </div>
+                                }
                             </div>
-                        }  
+                        }
                     </div>
-                    
+
                 </div>
             </div>
         </div>

@@ -14,8 +14,7 @@ import Profile from "./pages/Profile";
 
 function App() {
   return (
-    <div className="bg-default h-screen">
-    
+    <div className="bg-default no-scrollbar">
     <NavBar/>
       <Routes>
         <Route path="/" element={<Home/>}/>

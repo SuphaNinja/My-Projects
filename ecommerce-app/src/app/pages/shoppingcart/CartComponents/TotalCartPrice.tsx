@@ -1,13 +1,9 @@
 "use client"
-
 import api from "@/lib/axios";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-
-
 export default function TotalCartPrice({ cartItems ,className}: any) {
-    const [totalPrice, setTotalPrice] = useState<number>(0);
+    const [ totalPrice, setTotalPrice ] = useState<number>(0);
 
     useEffect(() => {
         if (cartItems && cartItems !== undefined) {
@@ -26,5 +22,5 @@ export default function TotalCartPrice({ cartItems ,className}: any) {
     }
     }, [cartItems]);
 
-    return <p className={className}>{totalPrice}</p>;
+    return <p className={className}>{Math.round(totalPrice)}</p>;
 }

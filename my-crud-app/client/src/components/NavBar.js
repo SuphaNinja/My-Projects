@@ -1,55 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../lib/axiosInstance";
 import { toast } from "react-toastify";
 import { useState, useEffect } from "react";
+import { ToggleTheme } from "./ui/ToggleTheme";
+import { Button } from "./ui/button";
 
 
 
 export default function NavBar() {
+    const navigate = useNavigate();
 
     const token = localStorage.getItem("token");
-    const [ isMenuOpen, setIsMenuOpen ] = useState(false);
-    
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const logout = () => {
         localStorage.removeItem("token");
+        navigate("/");
         window.location.reload();
     };
 
     const fetchedUser = useQuery({
-       queryKey: ["currentUser"],
-       queryFn: () => axiosInstance.get("/get-current-user")
+        queryKey: ["currentUser"],
+        queryFn: () => axiosInstance.get("/get-current-user")
     });
     const user = fetchedUser?.data?.data?.success;
-
-    const location = useLocation();
-
-    const getCurrentPageTitle = () => {
-        switch (location.pathname) {
-            case "/":
-                return "Home"
-            case "/signup":
-                return "Signup"
-            case "/login":
-                return "Login"
-            case "/createpost":
-                return "Create Post"
-            case "/editpost/:postId":
-                return "Edit Post"
-            case "/profile/":
-                return "Profile"
-        }
-    };
-
-
+    
     return (
         <div className="md:w-full border-b-2 z-50 fixed md:static w-full shadow-lg bg-primary px-6 py-4">
             <div className="flex relative items-center justify-between">
                 <div className="w-1/3 md:hidden">
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
                         <svg
-                            className="w-6 h-6"
+                            className="w-6 h-6 text-white dark:text-black"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -64,47 +47,68 @@ export default function NavBar() {
                         </svg>
                     </button>
                 </div>
-                <p className="absolute font-semibold md:text-2xl text-lg right-[180px] md:left-1/2 md:right-1/2">{getCurrentPageTitle()}</p>
                 <div className="w-1/3 flex justify-center md:justify-start">
-                    <Link to="/" className="text-2xl font-semibold hover:font-bold hover:underline font-serif">Blog Page</Link>
+                <Button asChild>
+                    <Link to="/" className="text-4xl    ">Blog Page</Link>
+                </Button>
                 </div>
                 <div className="w-1/3 hidden md:flex gap-4 justify-end">
-                    {token ? (
+                    {user ? (
                         <>
                             {user?.role === "ADMIN" && (
                                 <div className="flex gap-2 items-center">
-                                    <p className="text-xs font-bold">ADMIN</p>
-                                    <Link to="/createpost" className="text-lg font-semibold hover:underline transition-all">Create new post</Link>
+                                    <p className="font-semibold dark:text-black text-white ">ADMIN</p>
+                                    <Button asChild>
+                                        <Link to="/createpost" >Create new post</Link>
+                                    </Button>
                                 </div>
                             )}
-                            <Link to={`/profile/${user?.id}`} className="text-lg font-semibold hover:underline transition-all">Profile</Link>
-                            <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
+                            <Button asChild>
+                                <Link to={`/profile/${user?.id}`}>Profile</Link>
+                            </Button>
+                            <Button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</Button>
+                            <ToggleTheme />
                         </>
                     ) : (
                         <>
-                            <Link to="/signup" className="text-lg font-semibold hover:underline transition-all">Sign Up</Link>
-                            <Link to="/login" className="text-lg font-semibold hover:underline transition-all">Login</Link>
+                        <Button asChild>
+                            <Link to="/signup" >Sign Up</Link>
+                        </Button>
+                        <Button asChild>
+                            <Link to="/login">Login</Link>
+                        </Button>
+                            <ToggleTheme />
                         </>
                     )}
                 </div>
             </div>
             {isMenuOpen && (
                 <div className="mt-4 md:hidden">
-                    {token ? (
+                    {user ? (
                         <>
                             {user?.role === "ADMIN" && (
                                 <div className="flex flex-col gap-2 items-center">
-                                    <p className="text-xs font-bold">ADMIN</p>
-                                    <Link to="/createpost" className="text-lg font-semibold hover:underline transition-all">Create new post</Link>
-                                    <Link to={`/profile/${user?.id}`} className="text-lg font-semibold hover:underline transition-all">Profile</Link>
+                                    <p className="text-xs font-bold dark:text-black text-white">ADMIN</p>
+                                    <Button asChild>
+                                        <Link to="/createpost" >Create new post</Link>
+                                    </Button>
+                                    <Button asChild>
+                                        <Link to={`/profile/${user?.id}`} >Profile</Link>
+                                    </Button>
                                 </div>
                             )}
-                            <button className="text-lg font-semibold hover:underline transition-all" onClick={logout}>Log out</button>
+                            <Button className="" onClick={logout}>Log out</Button>
+                            <ToggleTheme />
                         </>
                     ) : (
                         <>
-                            <Link to="/signup" className="text-lg font-semibold hover:underline transition-all block">Sign Up</Link>
-                            <Link to="/login" className="text-lg font-semibold hover:underline transition-all block">Login</Link>
+                            <Button asChild>
+                                <Link to="/signup" >Sign Up</Link>
+                            </Button>
+                            <Button asChild>
+                                <Link to="/login">Login</Link>
+                            </Button>
+                                <ToggleTheme />
                         </>
                     )}
                 </div>

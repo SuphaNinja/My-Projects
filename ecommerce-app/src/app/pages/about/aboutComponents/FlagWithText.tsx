@@ -1,17 +1,13 @@
 "use client"
 import { useState } from 'react'
-
 import Flag from 'react-world-flags'
 
-
 export default function FlagWithText({ countryCode, title, text }: any) {
-
     const [showText, setShowText] = useState(false)
-
 
     return (
         <div className='relative'>
-            <div className={`h-12 w-16  mb-4  rounded-xl ${showText ? "mx-auto " : ""}`}>
+            <div className={`h-12 w-16 md:mb-4 rounded-xl ${showText ? "mx-auto " : ""}`}>
                 <button onClick={() => setShowText(!showText)} className='h-full w-full'>
                     <Flag
                         code={countryCode}
@@ -22,7 +18,7 @@ export default function FlagWithText({ countryCode, title, text }: any) {
             <hr />
             {showText &&
                 <div className='mx-auto'>
-                    <h1 className='text-center text-2xl font-semibold'>{title}</h1>
+                    <h1 className='text-center md:text-2xl'>{title}</h1>
                     <p className='text-center mt-2'>{text}</p>
                 </div>
             }

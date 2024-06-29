@@ -18,20 +18,14 @@ interface UserWithPoints extends User {
 export default function Page() {
   const [ searchData, setSearchData ] = useState("");
   const [ sortedUsers, setSortedUsers] = useState<UserWithPoints[]>([]);
+  const [ isFollowing, setIsFollowing ] = useState(false);
 
   const queryClient = useQueryClient();
+
   const searchUsers = useMutation({
     mutationFn: () => api.searchUsers({ content: searchData }),
   });
-
-  const followUser = useMutation({
-    mutationFn: (userId:string) => api.followUser(userId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({queryKey:["friend"]}),
-      queryClient.invalidateQueries({queryKey:["users"]})
-    }
-  });
-
+  
   const currentUser = useQuery({
     queryKey: ["user"],
     queryFn: () => api.getCurrentUser(),
@@ -51,6 +45,14 @@ export default function Page() {
     setSearchData(e.target.value);
     searchUsers.mutate();
   };
+  
+  const followUser = useMutation({
+    mutationFn: (userId:string) => api.followUser(userId),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["friend"] }),
+        queryClient.invalidateQueries({ queryKey: ["users"] })
+      },
+  });
 
   const followUserFunction = (user: any, currentUserId: any) => {
     followUser.mutate(user.id);
@@ -59,7 +61,7 @@ export default function Page() {
     } else {
       toast({ variant: "default", title: `Success`, description: `You followed ${user.name}` })
     }
-    checkFollowStatus(currentUserId, user)
+    setIsFollowing(!isFollowing);
   };
 
   const checkFollowStatus = (currentUserId: any, user: any) => {
@@ -77,7 +79,6 @@ export default function Page() {
     return totalPoints;
   };
   
-
   const calculatePointsForUsers = (users: User[]): UserWithPoints[] => {
     return users.map(user => ({
       ...user,
@@ -93,24 +94,21 @@ export default function Page() {
   useEffect(() => {
     if(allUsers.isSuccess){
       setSortedUsers(sortUsersByPoints(allUsers.data.allUsers))
-    }
-    
-  }, [allUsers])
+    };
+  }, [allUsers.isSuccess])
 
   return (
     <Home>
-      <div className="grid grid-cols-1 pt-4 md:grid-cols-12">
-        <div className="flex px-2 flex-col col-span-3 h-screen">
-          <div className="flex flex-col mb-2 gap-1">
+      <div className="md:grid flex flex-col mt-12 md:mt-0 gap-12 md:gap-0 md:pt-4 md:grid-cols-12">
+        <div className="flex px-2 flex-col col-span-3 md:h-screen">
             <p className="text-xl font-semibold">Search for users...</p>
             <Input value={searchData} onChange={handleChange} type="text" placeholder="Search by name or email..."/>
-          </div>
           {searchUsers.data && searchUsers.data.length > 0 ? 
           (
-            <div className="overflow-y-scroll px-2 mt-2 h-screen">
+            <div className="overflow-y-auto md:px-2 mt-2 md:h-screen">
               {searchUsers.data.map((user:any, index:any ) => (
-                <div key={index} className="grid grid-cols-6 gap-2 p-2 border-2 items-center bg-slate-200 dark:bg-slate-700 justify-center border-slate-950 rounded-md overflow-hidden">
-                  <div className="col-span-2 border-r-4 pr-4 h-20 w-full flex items-center justify-center ">
+                <div key={index} className="grid grid-cols-6 gap-2 p-2 items-center justify-center border rounded-md">
+                  <div className="col-span-2 pr-4 h-20 w-full flex items-center justify-center ">
                     <img src={user.image} className="size-full object-cover rounded-full"/>
                   </div>
                   <div className="flex flex-col justify-center gap-2 col-span-2 h-20 w-full">
@@ -131,15 +129,14 @@ export default function Page() {
           null
           }
         </div>
-        <div className="col-span-6 border-x-4 h-screen">
-          <div className="flex gap-12">
+        <div className="col-span-6 border-x md:h-screen">
             <div className="flex w-full flex-col gap-4 justify-center">
-              <h2 className="text-3xl underline text-center font-semibold ">Leaderboard</h2>
+              <h2 className="md:text-3xl text-xl underline text-center font-semibold ">Leaderboard</h2>
               {allUsers.isSuccess &&
                 <div className="flex w-full flex-col gap-4 justify-center">
                   {sortedUsers.map((user:any, index:number ) => (
-                  <div key={index} className="grid md:w-2/3 mx-auto grid-cols-6 gap-2 p-2 border-2 items-center bg-slate-200 dark:bg-slate-700 justify-center border-slate-950 rounded-md overflow-hidden">
-                    <div className="col-span-2 border-r-4 pr-4 h-20 w-full flex items-center justify-center ">
+                  <div key={index} className="grid md:w-2/3 mx-auto grid-cols-6 gap-2 p-2 border items-center justify-center rounded-md">
+                    <div className="col-span-2 border-r pr-4 h-20 w-full flex items-center justify-center ">
                       <p className="text-2xl mr-4">{index + 1}.</p>
                       <img src={user.image} className="size-full object-cover rounded-full" />
                     </div>
@@ -151,7 +148,7 @@ export default function Page() {
                       {currentUser.isSuccess ?
                         <>
                           {currentUser.data.id !== user.id ?
-                              <Button onClick={() => followUserFunction(user, currentUser.data.id)}>{checkFollowStatus(currentUser.data.id, user)}</Button>
+                            <Button onClick={() => followUserFunction(user, currentUser.data.id)}>{checkFollowStatus(currentUser.data.id, user)}</Button>
                             :
                             <p className="text-lg font-semibold">( You )</p>
                           }
@@ -165,15 +162,14 @@ export default function Page() {
                 </div>
               }
             </div>
-          </div>
         </div>
-        <div className="col-span-3 h-screen px-4">
+        <div className="col-span-3 md:h-screen md:px-4">
           <h2 className="text-center text-xl font-semibold">FriendsList</h2>
           {friendList.isSuccess && friendList.data.friendList.length > 0 ? 
             <div className="flex w-full flex-col gap-4 justify-center">
               {friendList.data.friendList.map((user: any, index: number) => (
-                <div key={index} className="grid w-full mx-auto grid-cols-6 gap-2 p-2 border-2 items-center bg-slate-200 dark:bg-slate-700 justify-center border-slate-950 rounded-md overflow-hidden">
-                  <div className="col-span-2 border-r-4 pr-4 h-20 w-full flex items-center justify-center ">
+                <div key={index} className="grid w-full mx-auto grid-cols-6 gap-2 p-2 border items-center justify-center rounded-md">
+                  <div className="col-span-2 border-r pr-4 h-20 w-full flex items-center justify-center ">
                     <img src={user.image} className="size-full object-cover rounded-full" />
                   </div>
                   <div className="flex flex-col justify-center gap-2 col-span-2 h-20 w-full">

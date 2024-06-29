@@ -1,15 +1,10 @@
 import { useState } from "react";
 import ClientInfo from "./ClientInfo";
-import ClientChat from "./ClientChat";
 import ClientGoal from "./ClientGoal";
-
-
-
+import { Button } from "../ui/button";
 
 export default function ClientOverview({ user, setActiveComponent }) {
-
-    const [activeOverview, setActiveOverview] = useState("tips");
-
+    const [activeOverview, setActiveOverview] = useState("clientinfo");
 
     const renderComponent = () => {
         switch (activeOverview) {
@@ -23,23 +18,24 @@ export default function ClientOverview({ user, setActiveComponent }) {
     };
 
     return (
-        <div>
-            <p className="text-center md:text-4xl mb-6 text-xl">Overview</p>
-            <div className="w-full md:px-12 flex flex-col">
-                <div className="flex justify-evenly">
-                    <button
-                        onClick={() => setActiveOverview('clientinfo')}
-                        className={`md:text-xl transition-all hover:font-semibold  hover:underline ${activeOverview === 'clientinfo' ? " text-white font-semibold underline " : "text-slate-300"}`}>
-                        Client information
-                    </button>
-                    <button
-                        onClick={() => setActiveOverview('clientgoal')}
-                        className={`md:text-xl transition-all hover:font-semibold  hover:underline ${activeOverview === 'clientgoal' ? " text-white font-semibold underline " : "text-slate-300"}`}>
-                        Client Goal
-                    </button>
-                </div>
-                <div>{renderComponent()}</div>
+        <div className="w-full md:px-12 mt-8 flex flex-col">
+            <div className="flex justify-evenly">
+                <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => setActiveOverview('clientinfo')}
+                    className={` ${activeOverview === 'clientinfo' && "underline"}`}>
+                    Client info
+                </Button>
+                <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => setActiveOverview('clientgoal')}
+                    className={`${activeOverview === 'clientgoal' && "underline" }`}>
+                    Client Goal
+                </Button>
             </div>
+            <div>{renderComponent() }</div>
         </div>
     )
 }

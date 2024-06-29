@@ -6,7 +6,6 @@ import { SessionProvider } from "next-auth/react";
 import Providers, { ThemeProvider } from "./Providers";
 import { Toaster } from "@/components/ui/toaster";
 
-
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -22,17 +21,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="en">
       <body className={inter.className}>
         <SessionProvider session={session}>
-          <Providers>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-            {children}
-            <Toaster/>
-            </ThemeProvider>
-          </Providers>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+            <Providers>
+              {children}
+              <Toaster />
+            </Providers>
+          </ThemeProvider>
         </SessionProvider>
       </body>
     </html>
