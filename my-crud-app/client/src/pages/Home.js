@@ -16,9 +16,9 @@ export default function Home() {
     });
 
     return (
-        <div className="md:mt-4 flex flex-col md:flex-row h-[90vh] w-full">
+        <div className="md:mt-4 md:grid md:grid-cols-6 flex flex-col md:flex-row h-[90vh] w-full">
             <div
-                className={`transition-all duration-500 ${isViewingComments ? 'w-[66%]' : 'w-[100%]'} 
+                className={`transition-all duration-500 ${isViewingComments ? 'col-span-4' : 'col-span-6'} 
                 md:pb-2 overflow-y-auto flex flex-col md:gap-4 h-full md:h-[90vh] w-full scroll-snap-y scroll-smooth`}
             >
                 {posts.isSuccess ? (
@@ -46,7 +46,7 @@ export default function Home() {
                 )}
             </div>
             <div
-                className={`transition-all duration-500 ${isViewingComments ? 'w-[33%] ' : 'w-[0%] '}
+                className={`transition-all duration-500 ${isViewingComments ? 'block ' : 'hidden '}
                 md:col-span-2 h-2/12  w-full`}
             >
                 {clickedPostId && (

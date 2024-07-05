@@ -1,7 +1,8 @@
 
 import axiosInstance from "../../lib/axiosInstance";
 import { useEffect, useLayoutEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
@@ -10,6 +11,8 @@ import { Label } from "../ui/label";
 
 export default function Profile({ user }) {
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+
     const [ isSomethingEdited, setIsSomethingEdited ] = useState(false);
 
     const [ formData, setFormData ] = useState({
@@ -52,6 +55,20 @@ export default function Profile({ user }) {
             updateProfile.mutate(formData);
         }
     }; 
+
+    const deleteUser = useMutation({
+        mutationFn: (userIdToDelete) =>  axiosInstance.post("/delete-user", {userIdToDelete}),
+        onSuccess: (data) => {
+            if (data.data.success) { toast(data.data.success) };
+            if (data.data.error) { toast(data.data.error) };
+        }
+    });
+    
+    const handleDeleteUser = () => {
+        deleteUser.mutate(user.id);
+        navigate("/");
+        window.location.reload();
+    };
     
     useEffect(() => {
         if (user) {
@@ -147,12 +164,19 @@ export default function Profile({ user }) {
                                     />
                             </div>
                             <div className="col-span-1 md:block hidden"/>
-                            <Button
-                                disabled={!isSomethingEdited}
-                                className="mt-auto col-span-2 md:col-span-1"
-                                onClick={() => handleEditProfile()}>
+                            <div className="col-span-2 justify-evenly md:flex">
+                                <Button
+                                    disabled={!isSomethingEdited}
+                                    onClick={() => handleEditProfile()}>
                                     {isSomethingEdited ? "Save Changes" : "Edit something"}
-                            </Button>
+                                </Button>
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => handleDeleteUser()}>
+                                    Delete account
+                                </Button>
+                            </div>
+                            
                         </>
                         }
                     </div>

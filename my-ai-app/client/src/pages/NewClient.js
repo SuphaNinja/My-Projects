@@ -9,9 +9,6 @@ import { Textarea } from "src/components/ui/textarea";
 import { CustomSelect } from "src/components/ui/CustomSelect";
 import { cn } from "src/lib/utils";
 
-
-
-
 export default function NewClient() {
     const [formData, setFormData] = useState({
         age: 15,

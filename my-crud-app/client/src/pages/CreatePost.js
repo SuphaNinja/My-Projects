@@ -50,8 +50,6 @@ export default function CreatePost() {
         }
     });
 
-
-
     const fetchedUser = useQuery({
         queryKey: ["user"],
         queryFn: () => axiosInstance.get("/get-current-user")
@@ -68,7 +66,6 @@ export default function CreatePost() {
         }
         createPost.mutate(data);
     };
-
 
     return (
         <form

@@ -107,7 +107,7 @@ export default function SignUp() {
                     </div>
 
                     <div className="col-span-2 md:col-span-1 font-medium">
-                        <Label htmlFor="adminKey">AdminKey:</Label>
+                        <Label htmlFor="adminKey">Trainer Key:</Label>
                         <Input
                             name="adminKey"
                             value={formData.adminKey}

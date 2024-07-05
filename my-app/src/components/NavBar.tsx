@@ -24,7 +24,7 @@ export default function NavBar() {
                         <Link href={process.env.NEXT_PUBLIC_URL + "pages/GamePage"}>Play!</Link>
                     </Button>
                     <Button asChild>
-                        <Link href={process.env.NEXT_PUBLIC_URL + "pages/MachHistory"}>Match History</Link>
+                        <Link href={process.env.NEXT_PUBLIC_URL + "pages/MatchHistory"}>Match History</Link>
                     </Button>
                     <Button onClick={() => signOut()}>Sign out</Button>
                     <div className="md:hidden">

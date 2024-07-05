@@ -6,9 +6,6 @@ import { useEffect, useState } from "react"
 import socket from "./socket"
 import { toast, useToast } from "@/components/ui/use-toast"
 
-
-
-
 export default function Card({ card, clickedCard, setClickedCard, gameSession, currentPlayerId }:any) {
 
     const { toast } = useToast();
@@ -21,7 +18,6 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
 
 
     const handleCardClick = () => {
-
         if (card.isMatched === true) {
             toast({ variant: "destructive", title: "Error", description: "Card has already been found!" })
             return;
@@ -54,10 +50,6 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
         setClickedCard(card);
     };
 
-
-    
-
-
     return (
         <div className="">
             {card && isVisible ? (
@@ -75,8 +67,8 @@ export default function Card({ card, clickedCard, setClickedCard, gameSession, c
                 )
             : (
                 <div>
-                        <button onClick={() => handleCardClick()} className={`md:w-32 md:h-32 lg:w-56 lg:h-56 w-24 h-24 overflow-hidden rounded-xl transition-all duration-500 transform ${!isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                            <img className="md:size-32 lg:size-56  size-24 " src="https://howlongtobeat.com/games/5203_League_of_Legends.jpg" />
+                    <button onClick={() => handleCardClick()} className={`md:w-32 md:h-32 lg:w-56 lg:h-56 w-24 h-24 overflow-hidden rounded-xl transition-all duration-500 transform ${!isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                        <img className="md:size-32 lg:size-56  size-24 " src="https://howlongtobeat.com/games/5203_League_of_Legends.jpg" />
                     </button>
                 </div>
                 )

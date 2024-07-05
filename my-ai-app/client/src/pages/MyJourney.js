@@ -8,7 +8,6 @@ import Chat from "../components/ProfileComponents/Chat";
 import { Button } from "src/components/ui/button";
 import { Skeleton } from "src/components/ui/skeleton";
 
-
 export default function MyJourney() {
     const [activeComponent, setActiveComponent] = useState('overview');
 

@@ -96,7 +96,7 @@ export default function Page() {
                     title: `${data.players[1].name} Won!`,
                     description: "Game will close in 5 seconds!"
                 });
-            } else {
+            } else if (data.players[0].points === 5 &&  data.players[1].points === 5) {
                 toast({
                     variant: "default",
                     title: `It's a draw!`,
@@ -126,11 +126,13 @@ export default function Page() {
             console.log("currentuser",currentUser)
             toast({
                 title: "You have been invited!",
-                description: `${data.inviteInfo.userName} has invited you to play!`,
-                action: <ToastAction onClick={() => {
-                    console.log(currentUser.data ,data.inviteInfo.sessionId)
+                description: `${data.inviteInfo.inviter} has invited you to play!`,
+                action: 
+                <ToastAction
+                    onClick={() => {
                     joinGame(data.invitedUser ,data.inviteInfo.sessionId)}
-                } altText="Accept">Accept</ToastAction>,
+                } altText="Accept">Accept
+                </ToastAction>,
             });
         };
 
@@ -279,9 +281,7 @@ export default function Page() {
                                     </div>
                                 ))}
                             </div>
-                        ):(
-                            <p>Start a Game to invite players!</p>
-                        ) 
+                        ) : ( <p>Start a Game to invite players!</p> ) 
                     }
                     </>
                     }

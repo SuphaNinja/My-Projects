@@ -7,7 +7,6 @@ import { Textarea } from "../ui/textarea";
 
 export default function Chat(user) {
     const [message, setMessage] = useState();
-
     const queryClient = useQueryClient();
 
     const sendMessage = useMutation({
@@ -69,7 +68,7 @@ export default function Chat(user) {
         }
         return Math.floor(seconds) + " sec ago";
     };
-    console.log(messages.data?.data?.messages)
+
     return (
         <div className="flex flex-col justify-between gap-4 md:mx-12 mt-4">
             <div className="overflow-y-auto no-scrollbar grid grid-cols-4 gap-4 h-[53vh] md:h-[350px]">

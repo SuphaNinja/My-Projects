@@ -194,7 +194,7 @@ app.post("/create-guide", verifyToken, async (req, res) => {
 
   } catch (error) {
     console.error("Error with OpenAI API Or creating guide:", error);
-    res.send({ error: "Something went wrong, please try again later!" });
+    res.status(500).send({ error: "Something went wrong, please try again later!" });
     return;
   }
 });
@@ -274,7 +274,36 @@ app.post("/login", async (req, res) => {
   }
 });
 
-//--------------------------------------LOGIN---------------------------------------------------------
+//--------------------------------------GET CURRENT USER---------------------------------------------------------
+
+app.post("/delete-user", verifyToken, async (req, res) => {
+  const userId = req.userId;
+  const { userIdToDelete } = req.body;
+
+  if (!userIdToDelete) { return res.send({ error: "User ID to delete has not been provided!" }) };
+  if (userIdToDelete !== userId) { return res.send({ error: "Unauthorized delete request!" }) };
+
+  try {
+    const userToDelete = await prisma.user.findUnique({
+      where: { id: userIdToDelete }
+    });
+
+    if (!userToDelete) { return res.send({ error: "User to delete not found!" }) };
+
+    await prisma.user.delete({
+      where: { id: userToDelete.id }
+    });
+    
+    res.send({success: "User has been deleted successfully"})
+
+  } catch (error) {
+    console.log("Error deleting user: ", error);
+    res.send({ error: "Something went wrong, please try again later!" });
+    return;
+  }
+});
+
+//--------------------------------------GET CURRENT USER---------------------------------------------------------
 
 app.get("/get-current-user", verifyToken, async (req, res) => {
   const userId = req.userId;
@@ -354,7 +383,7 @@ app.post("/send-message", verifyToken, async (req, res) => {
       });
     };
 
-    res.send({ success: "Ai respone has been created!" });
+    res.send({ success: "Response sent by AI!" });
 
   } catch (error) {
     console.log("Error sending message : ", error);

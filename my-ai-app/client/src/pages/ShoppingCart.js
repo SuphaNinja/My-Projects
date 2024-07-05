@@ -46,7 +46,7 @@ export default function ShoppingCart() {
         )
     };
 
-    if (currentUser.cart.cartItems.length < 1) {
+    if (currentUser.cart?.cartItems?.length < 1) {
         return (
             <div className="h-screen flex flex-col items-center ">
                 <p className="md:text-3xl mt-24">You have no items in your cart!</p>
@@ -68,10 +68,10 @@ export default function ShoppingCart() {
                 Proceed to Checkout
             </Button>
             )}
-            <p className="md:text-3xl text-2xl ml-6 mt-16 md:mt-0">ShoppingCart ({currentUser.cart.cartItems.length})</p>
+            <p className="md:text-3xl text-2xl ml-6 mt-16 md:mt-0">ShoppingCart ({currentUser.cart?.cartItems?.length})</p>
             <div className="grid grid-cols-4 md:p-6">
                 <div className="md:col-span-3 col-span-4 overflow-y-auto md:max-h-[80vh] flex gap-4 w-full flex-col">
-                    {currentUser.cart.cartItems.map((item, index) => (
+                    {currentUser.cart?.cartItems?.map((item, index) => (
                         <div key={index} className="flex flex-col md:flex-row w-full">
                             <CartItemCard itemId={item.productId} quantity={item.quantity} cartItemId={item.id} />
                         </div>

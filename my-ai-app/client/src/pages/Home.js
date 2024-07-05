@@ -112,26 +112,13 @@ export default function Home() {
                         className="m-auto hidden md:block text-white dark:text-black bg-slate-800 dark:bg-slate-200  px-4 py-2 font-semibold text-center ml-2 transition-all hover:bg-slate-600 text-xl rounded-full"
                         onClick={scrollLeft}>{"<"}
                     </button>
-                    {allProducts.isLoading && (
-                        <div className="flex items-center justify-center space-x-3">
-                            {[...Array(5)].map((_, index) => (
-                                <div key={index} className="flex flex-col space-y-3">
-                                    <Skeleton className="h-[200px] w-[300px] rounded-xl" />
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-8 w-[250px]" />
-                                        <Skeleton className="h-8 w-[200px]" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
                     <div
                         style={{ scrollBehavior: 'smooth', maxWidth: containerWidth }}
                         ref={scrollRef}
                         className="flex flex-col md:flex-row md:overflow-x-scroll md:h-[410px] no-scrollbar justify-center w-full items-center py-4 gap-4 ">
                         {products?.specialProducts.map((product, index) => (
                             <div key = { index } className = "flex md:w-[300px] border w-full md:h-full p-2 md:rounded-md">
-                                <RecommendedProducts product = { product } user = { user } isLoading = {allProducts.isLoading}/>
+                                <RecommendedProducts product = { product } user = { user } isLoading={allProducts.isLoading}/>
                             </div>
                         ))}
                     </div>
@@ -211,9 +198,9 @@ const OurTrainers = ({trainers}) => {
     )
 }
 
-const RecommendedProducts = ({ product, user }) => {
+const RecommendedProducts = ({ product ,user ,isLoading }) => {
     const queryClient = useQueryClient();
-
+    
     const addToCart = useMutation({
         mutationFn: () => axiosInstance.post("/add-to-cart", { productId: product.id, productPrice: product.price }),
         onSuccess: (data) => {
@@ -225,6 +212,22 @@ const RecommendedProducts = ({ product, user }) => {
     const handleAddToCart = () => {
         addToCart.mutate()
         queryClient.invalidateQueries(["currentUser"])
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center space-x-3">
+                {[...Array(5)].map((_, index) => (
+                    <div key={index} className="flex flex-col space-y-3">
+                        <Skeleton className="h-[200px] w-[300px] rounded-xl" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-8 w-[250px]" />
+                            <Skeleton className="h-8 w-[200px]" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
     };
 
     return (

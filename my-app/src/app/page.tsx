@@ -10,7 +10,6 @@ import { QueryClient } from "@tanstack/react-query";
 import { User } from "@prisma/client";
 import { toast } from "@/components/ui/use-toast";
 
-
 interface UserWithPoints extends User {
   totalPoints: number;
 }
@@ -39,7 +38,7 @@ export default function Page() {
   const allUsers = useQuery({
     queryKey: ["users"],
     queryFn: () => api.getAllUsers(),
-  })
+  });
 
   const handleChange = (e: any) => {
     setSearchData(e.target.value);
@@ -134,7 +133,7 @@ export default function Page() {
               <h2 className="md:text-3xl text-xl underline text-center font-semibold ">Leaderboard</h2>
               {allUsers.isSuccess &&
                 <div className="flex w-full flex-col gap-4 justify-center">
-                  {sortedUsers.map((user:any, index:number ) => (
+                  {sortedUsers.map((user:any, index:number) => (
                   <div key={index} className="grid md:w-2/3 mx-auto grid-cols-6 gap-2 p-2 border items-center justify-center rounded-md">
                     <div className="col-span-2 border-r pr-4 h-20 w-full flex items-center justify-center ">
                       <p className="text-2xl mr-4">{index + 1}.</p>
@@ -148,7 +147,7 @@ export default function Page() {
                       {currentUser.isSuccess ?
                         <>
                           {currentUser.data.id !== user.id ?
-                            <Button onClick={() => followUserFunction(user, currentUser.data.id)}>{checkFollowStatus(currentUser.data.id, user)}</Button>
+                              <Button onClick={() => followUserFunction(user, currentUser.data.id)}>{isFollowing ? "follow": "unfollow"}</Button>
                             :
                             <p className="text-lg font-semibold">( You )</p>
                           }

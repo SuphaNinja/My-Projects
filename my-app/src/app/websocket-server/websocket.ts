@@ -1,7 +1,10 @@
 import cors from "cors";
-
 import express from "express";
 import { createServer } from "http";
+import prisma from "@/lib/prisma";
+import { User } from "@prisma/client";
+import { Server } from "socket.io";
+
 const app = express();
 const api = express.Router();
 
@@ -10,36 +13,26 @@ app.use(
         origin: ["http://localhost:3000"],
     })
 );
-
 app.use("/api", api);
 app.use(express.json());
+
 const server = createServer(app);
-
 const port = 8080;
-
 
 server.listen(port, () => {
     console.log(`App started on http://localhost:${port}`);
 });
 
 // Initializing Socket.io server
-import { Server } from "socket.io";
 const io = new Server(server, {
     cors: {
         origin: "*",
     },
 });
 
-import prisma from "@/lib/prisma";
-import { User } from "@prisma/client";
-
 const userSocketMap = new Map();
-
 io.on("connection", async (socket) => {
-    const count = io.engine.clientsCount;
-    console.log(`User ${socket.id} Connected`);
-    console.log("Client Count " + count);
-   
+
     socket.on("register", (userId) => {
         console.log("user has been registered userId:",userId,"socketId", socket.id)
         if (userId && socket.id) {
@@ -67,9 +60,7 @@ io.on("connection", async (socket) => {
 
     // Fetch all memoryCards so they cant be randomized
     async function fetchMemoryCards() {
-        return await prisma.memoryCards.findMany({
-            where: {}
-        });
+        return await prisma.memoryCards.findMany({});
     };
     
     // Create GameSession function 
@@ -101,7 +92,6 @@ io.on("connection", async (socket) => {
 
     // Create player function 
     async function createPlayer(player: any, sessionId: any ) {
-        console.log("player",player)
         const playerData = {
             userId: player.id,
             gameSessionId: sessionId,
@@ -110,11 +100,11 @@ io.on("connection", async (socket) => {
         };
             return await prisma.player.create({
                 data: playerData
-            })
+            });
     };
+
     // Create Game
     socket.on("CreateGame", async (user) => {
-        console.log("startrequest:", user);
         try {
         // Fetch and shuffle memory cards
         const memoryCards = await fetchMemoryCards();
@@ -159,24 +149,33 @@ io.on("connection", async (socket) => {
   
     //PlayerTwo Joining existing Gamesession by providing sessionId on client
     socket.on("JoinGame", async (player: User, sessionId: string ) =>  {
-        await createPlayer(player, sessionId);
-        const gameData = await prisma.gameSession.update({
-            where: { id: sessionId },
-            data: { status: "active" },
-            include: { 
-                players: {
-                    include: { foundCards:true }
-                },
-                gameCards: true
-            }
-        }); 
+        try {
+            await createPlayer(player, sessionId);
+            const gameData = await prisma.gameSession.update({
+                where: { id: sessionId },
+                data: { status: "active" },
+                include: { 
+                    players: {
+                        include: { foundCards:true }
+                    },
+                    gameCards: true
+                }
+            }); 
 
-        socket.join(sessionId);
+            if (gameData.players[0].id === player.id) {
+                return socket.emit("error", "Player one and player two has the same UserID game could not be joined!");
+            };
 
-        io.to(sessionId).emit("UpdatingGameData", gameData);
-        io.to(sessionId).emit("JoinGame", gameData);
-
-        startTimer(sessionId);
+            socket.join(sessionId);
+            io.to(sessionId).emit("UpdatingGameData", gameData);
+            io.to(sessionId).emit("JoinGame", gameData);
+            startTimer(sessionId);
+            
+        } catch (error) {
+            console.log("Error joining game: ", error);
+            socket.emit("error", "Something went wrong when joining. Try again later!");
+            return;
+        };
     });
 
     const resetGameTimer = async (sessionId:string) => {
@@ -194,7 +193,6 @@ io.on("connection", async (socket) => {
             try {
                 const session = await prisma.gameSession.findUnique({
                     where: { id: sessionId },
-                    select: { currentTime: true, currentTurn: true }
                 });
 
                 if (session && session.currentTime && session.currentTime > 0) {
@@ -226,7 +224,6 @@ io.on("connection", async (socket) => {
                             }
                         }
                     });
-                    resetGameTimer(sessionId)
 
                     io.to(sessionId).emit("UpdatingGameData", timeIsUp);
                 };
@@ -249,13 +246,13 @@ io.on("connection", async (socket) => {
                 throw new Error("User could not be found", user );
             };
 
-            if (clickedCard !== null && selectedCards.length < 1) {
+            if (clickedCard && selectedCards.length < 1) {
                 await prisma.gameCard.update({
                     where: { id: clickedCard.id, memoryCardId: clickedCard.memoryCardId},
                     data: {
                         isVisible: true
                     }
-                })
+                });
                 selectedCards.push(clickedCard);
 
                 const session = await prisma.gameSession.findUnique({
@@ -277,7 +274,7 @@ io.on("connection", async (socket) => {
             };
 
             if (
-                clickedCard !== null && selectedCards.length > 0 
+                clickedCard && selectedCards.length > 0 
                 && clickedCard.memoryCardId !== selectedCards[0].memoryCardId
                 && clickedCard.title !== selectedCards[0].title
             ) {
@@ -328,7 +325,7 @@ io.on("connection", async (socket) => {
                         },
                         data: { isVisible: false }
                     });
-                    
+
                     selectedCards = [];
 
                     const session = await prisma.gameSession.findUnique({
@@ -408,7 +405,8 @@ io.on("connection", async (socket) => {
 
             };
         } catch (error) {
-            console.log(error)
+            io.to(clickedCard.gameSessionId).emit("error", "Something went wrong, try again later!");
+            return
         }
     });
     
@@ -425,13 +423,9 @@ io.on("connection", async (socket) => {
         });
 
         io.to(session.id).emit("gameCompleted", completedSession);
-    }); 
+    });
     
     socket.on("invitePlayer", async (sessionId, userName, invitedId) => {
-        console.log("sessionID",sessionId)
-        console.log("userName",userName)
-        console.log("invitedId",invitedId)
-        
         const inviteInfo = {
             sessionId: sessionId,
             inviter: userName,
@@ -444,10 +438,8 @@ io.on("connection", async (socket) => {
 
         const invitedSocketId = userSocketMap.get(invitedId);
         if (invitedSocketId && invitedUser) {
-            console.log(`User with socketID ${invitedSocketId} is connected.`);
             io.to(invitedSocketId).emit("acceptInvite", {inviteInfo, invitedUser});
         } else {
-            console.log(`User with ID ${invitedId} is not connected.`);
             socket.emit("error",`User with ID ${invitedId} is not connected.`)
         };
     });
